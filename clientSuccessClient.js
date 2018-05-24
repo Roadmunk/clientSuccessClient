@@ -291,6 +291,14 @@ JS.class(ClientSuccessClient, {
 			return this.hitClientSuccessAPI('PUT', `clients/${clientId}/contacts/${contactId}/details`, contactToUpdate);
 		},
 
+		/**
+		 * Creates or updates a Contact based on the attributes provided
+		 * @param  {String} clientId         ClientSuccess ID of the Client that will contain the Contact
+		 * @param  {String} contactId        (Optional) if provided, it will trigger an update, else it will create a new Contact
+		 * @param  {Object} attributes       ClientSuccess native Contact attributes to fill
+		 * @param  {Object} customAttributes ClientSuccess Contact custom attributes to fill
+		 * @return {Object}                  Resulting Contact data object
+		 */
 		upsertContact : async function(clientId, contactId, attributes, customAttributes) {
 			if (!clientId) {
 				throw new Error('clientId is required for upsertContact');
