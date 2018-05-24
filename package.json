@@ -1,0 +1,35 @@
+{
+  "name": "@roadmunk/client-success-client",
+  "description": "Client library for the ClientSuccess.com API",
+  "version": "1.0.6",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Roadmunk/clientSuccessClient.git"
+  },
+  "main": "clientSuccessClient.js",
+  "dependencies": {
+    "@roadmunk/jsclass": "^1.0.8",
+    "axios": "^0.16.0",
+    "bluebird": "^3.0.0",
+    "util": "^0.10.3"
+  },
+  "devDependencies": {
+    "@roadmunk/eslint-config-roadmunk": "^2.0.7",
+    "chai": "^4.1.2",
+    "chai-as-promised": "^7.1.1",
+    "eslint": "^4.11.0",
+    "mocha": "^5.1.1"
+  },
+  "engines": {
+    "node": ">=6.10.2"
+  },
+  "bugs": {
+    "url": "https://github.com/Roadmunk/clientSuccessClient/issues"
+  },
+  "homepage": "https://github.com/Roadmunk/clientSuccessClient#readme",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Roadmunk",
+  "license": "ISC"
+}
