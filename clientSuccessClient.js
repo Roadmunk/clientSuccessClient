@@ -1,5 +1,6 @@
 const JS            = require('@roadmunk/jsclass/JS');
 const axios         = require('axios');
+const _             = require('lodash');
 
 const RETRY_LIMIT = 10;	// number of retry attempts for any given API call
 const URL         = 'https://api.clientsuccess.com/v1/';
@@ -13,9 +14,10 @@ const AuthenticationError = ClientSuccessClient.AuthenticationError = JS.class('
 
 JS.class(ClientSuccessClient, {
 	fields : {
-		username  : null,
-		password  : null,
-		authToken : null,
+		username    : null,
+		password    : null,
+		authToken   : null,
+		clientTypes : null,
 	},
 
 	constructor : function(username, password) {
@@ -89,6 +91,9 @@ JS.class(ClientSuccessClient, {
 				catch (error) {
 					if (error.response.status === 401) {
 						this.authToken = null;
+					}
+					else if (error.response.status === 503) {
+						throw new Error('ClientSuccess Service Temporarily Unavailable');
 					}
 					else {
 						// Package up the resulting API error for the function caller to handle on the other end
@@ -196,14 +201,15 @@ JS.class(ClientSuccessClient, {
 			if (arguments.length < 3 && typeof clientId == 'object') {
 				// only attributes are passed into the clientId slot, move it to the attributes slot
 				attributes = clientId;
-				let client = await this.createClient(attributes);
-				// check to see if we were intended to update the user object
+				const client = await this.createClient(attributes);
+				clientId = client.id;
+				// create a check object to see if we had the intention of updating the client
 				const updateClientAttributes = Object.assign({}, client); // clone the client object for comparason purposes
-				// check to see if a customAttribute update is required
-				if (JSON.stringify(Object.assign(updateClientAttributes, attributes)) != JSON.stringify(client)) {
-					client = await this.updateClient(client.id, updateClientAttributes, customAttributes);
+				this.patchCustomAttributes(updateClientAttributes, customAttributes);
+				// check to see if a client update is required
+				if (JSON.stringify(Object.assign(updateClientAttributes, attributes)) == JSON.stringify(client)) {
+					return client;
 				}
-				return client;
 			}
 			return clientId ? this.updateClient(clientId, attributes, customAttributes) : this.createClient(attributes, customAttributes);
 		},
@@ -308,26 +314,52 @@ JS.class(ClientSuccessClient, {
 				// only attributes are passed into the clientId slot, move it to the attributes slot
 				customAttributes = attributes;
 				attributes = contactId;
-				let contact = await this.createContact(clientId, attributes, customAttributes);
+				const contact = await this.createContact(clientId, attributes, customAttributes);
+				contactId = contact.id;
 				// check to see if we were intended to update the user object
-				const updateContactAttributes = Object.assign({}, contact); // clone the client object for comparason purposes
-				// check to see if a customAttribute update is required
-				if (JSON.stringify(Object.assign(updateContactAttributes, attributes)) != JSON.stringify(contact)) {
-					contact = await this.updateContact(clientId, contact.id, updateContactAttributes, customAttributes);
+				let updateContactAttributes = Object.assign({}, contact); // clone the client object for comparason purposes
+				if (!_.get(updateContactAttributes, 'customFieldValues[0]')) {
+					// The ClientSuccess create contact API does not return back clean custom attributes, only null values
+					// We need to pull down a clean object using the getContact API to get around this
+					// A bug report has been filed with them
+					updateContactAttributes = await this.getContact(clientId, contactId);
 				}
-				return contact;
+				this.patchCustomAttributes(updateContactAttributes, customAttributes);
+				// check to see if a customAttribute update is required
+				if (JSON.stringify(Object.assign(updateContactAttributes, attributes)) == JSON.stringify(contact)) {
+					return contact;
+				}
 			}
 
 			return contactId ? this.updateContact(clientId, contactId, attributes, customAttributes) : this.createContact(clientId, attributes, customAttributes);
 		},
 
 		/**
+		 * Finds the Client Type ID associated with the Client Success Client Type Title
+		 * @param  {String} clientTypeString - Title of the Client Type we are looking for
+		 * @return {Integer}                 - ID of the Client Type we are looking for
+		 */
+		getClientTypeId : async function(clientTypeString) {
+			if (!clientTypeString) {
+				throw new Error('No clientTypeString provided in getClientTypeId');
+			}
+
+			if (!this.clientTypes) {
+				this.clientTypes = await this.hitClientSuccessAPI('GET', 'client-segments');
+			}
+
+			const clientType = this.clientTypes.find(o => o.title === clientTypeString);
+			// const clientType = _.find(this.clientTypes, { title : clientTypeString });
+			return clientType.id;
+		},
+
+		/**
 		 * Helper function for patching a ClientSuccess object's custom attribtues fields.
 		 * Uses the 'Label' field for matching
-		 * @param  {Object} object           Object that we are looking to patch
-		 * @param  {Object} customAttributes Object of custom attributes and their desired values (keyed on custom attribute label)
+		 * @param  {Object} object           - Object that we are looking to patch
+		 * @param  {Object} customAttributes - Object of custom attributes and their desired values (keyed on custom attribute label)
 		 */
-		patchCustomAttributes : async function(object, customAttributes) {
+		patchCustomAttributes : function(object, customAttributes) {
 			for (const customAttribute in customAttributes) {
 				for (let i = 0; i < object.customFieldValues.length; i++) {
 					if (customAttribute == object.customFieldValues[i].label) {

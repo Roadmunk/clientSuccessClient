@@ -136,6 +136,7 @@ describe('clientSuccessClient', function() {
 		});
 
 		it('Should create a new fresh Client with custom attribtues', async function() {
+			this.timeout(15000);
 			const newUserName = `TEST user ${(new Date()).getTime()}`;
 			const testExtID     = `${(new Date()).getTime()}test2`;
 
@@ -387,6 +388,7 @@ describe('clientSuccessClient', function() {
 		let testClient;
 
 		before(async function() {
+			this.timeout(15000);
 			// create test client
 			const newClientName = `TEST client ${(new Date()).getTime()}`;
 			const testClientAttributes = {
@@ -441,6 +443,7 @@ describe('clientSuccessClient', function() {
 		});
 
 		it('Should create a contact with custom attributes passed', async function() {
+			this.timeout(15000);
 			// create a test contact
 			const newContactName = `TEST user ${(new Date()).getTime()}`;
 			const testExtID      = `${(new Date()).getTime()}test`;
@@ -461,7 +464,7 @@ describe('clientSuccessClient', function() {
 
 			// pull down the contact detail model
 			testContact = await CS.getContact(testContact.clientId, testContact.id);
-			expect(testContact.customFieldValues[0].value).to.equal(testExtID);
+			expect(testContact.customFieldValues[1].value).to.equal(testExtID);
 		});
 
 		it('should error on invalid data');
@@ -530,7 +533,7 @@ describe('clientSuccessClient', function() {
 			updatedContact = await CS.getContact(testContact.clientId, testContact.id);
 
 			// verify that client has been updated
-			expect(updatedContact.customFieldValues[0].value).to.equal(testExtID);
+			expect(updatedContact.customFieldValues[1].value).to.equal(testExtID);
 		});
 
 		it('should error when we pass an invalid data type in');
@@ -613,6 +616,7 @@ describe('clientSuccessClient', function() {
 		});
 
 		it('Should create a new Contact with custom attributes', async function() {
+			this.timeout(15000);
 			const upsertedContactTestName = `TEST ${(new Date()).getTime()} test5`;
 			const testExtID               = `${(new Date()).getTime()}test`;
 			const contactAttributes = {
@@ -627,7 +631,7 @@ describe('clientSuccessClient', function() {
 			upsertedContact = await CS.getContact(testClient.id, upsertedContact.id);
 			expect(upsertedContact.firstName).to.equal(upsertedContactTestName);
 			expect(upsertedContact.lastName).to.equal(upsertedContactTestName);
-			expect(upsertedContact.customFieldValues[0].value).to.equal(testExtID);
+			expect(upsertedContact.customFieldValues[1].value).to.equal(testExtID);
 		});
 
 		it('Should update an existing Contact with custom attribtues', async function() {
@@ -646,7 +650,19 @@ describe('clientSuccessClient', function() {
 			expect(upsertedContact.id).to.equal(testContact.id);
 			expect(upsertedContact.firstName).to.equal(`${upsertedContactTestName}updated`);
 			expect(upsertedContact.lastName).to.equal(`${upsertedContactTestName}updated`);
-			expect(upsertedContact.customFieldValues[0].value).to.equal(`${testExtID}updated`);
+			expect(upsertedContact.customFieldValues[1].value).to.equal(`${testExtID}updated`);
+		});
+	});
+
+	describe('getClientTypeId', async function() {
+		it('Should return back the appropriate client type ID when a client type label is passed', async function() {
+			this.timeout(15000);
+			const businessClientTypeId = await CS.getClientTypeId('Business');
+			expect(businessClientTypeId).to.equal(3535);
+		});
+
+		it('Should throw an error on invalid data', async function() {
+			expect(CS.getClientTypeId()).to.eventually.be.rejectedWith('No clientTypeString provided in getClientTypeId');
 		});
 	});
 
