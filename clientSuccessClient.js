@@ -1,9 +1,9 @@
-const JS                   = require('@roadmunk/jsclass/JS');
-const axios                = require('axios');
-const _                    = require('lodash');
+const JS    = require('@roadmunk/jsclass/JS');
+const axios = require('axios');
+const _     = require('lodash');
 
-const RETRY_LIMIT          = 10;	// number of retry attempts for any given API call
-const URL                  = 'https://api.clientsuccess.com/v1/';
+const RETRY_LIMIT = 10;	// number of retry attempts for any given API call
+const URL         = 'https://api.clientsuccess.com/v1/';
 
 const ClientSuccessClient  = module.exports                           = JS.class('ClientSuccessClient');
 const TooManyAttemptsError = ClientSuccessClient.TooManyAttemptsError = JS.class('TooManyAttemptsError');
@@ -36,7 +36,7 @@ JS.class(ClientSuccessClient, {
 						password : this.password,
 					},
 				});
-				if (response.data.hasOwnProperty('access_token') && response.data.access_token != null) {
+				if (_.get(response, 'data.access_token')) {
 					this.authToken = response.data.access_token;
 				}
 			}
@@ -53,7 +53,7 @@ JS.class(ClientSuccessClient, {
 		 * Hit the ClientSuccess API with provided perameters. Also catch and handle bad response codes.
 		 * @param {String} method         - Type of the API call.
 		 * @param {String} path           - URI path of the ClientSuccess endpoint
-		 * @param {Object} data           - Data set that will be passed through to the ClientSuccess API endpoint.
+		 * @param {Object} data           - Dataset that will be passed through to the ClientSuccess API endpoint.
 		 * @returns {Object|null}         - response body from the HTTP request
 		 */
 		hitClientSuccessAPI : async function(method, path, data) {
@@ -86,7 +86,8 @@ JS.class(ClientSuccessClient, {
 					}
 					else {
 						// Package up the resulting API error for the function caller to handle on the other end
-						throw new Error(`Invalid request, status code: ${error.response.status} - ${error.response.statusText}`);
+						// throw new Error(`Invalid request, status code: ${error.response.status} - ${error.response.statusText}`);
+						throw error;
 					}
 				}
 			}
@@ -99,7 +100,7 @@ JS.class(ClientSuccessClient, {
 		 * @param {String} clientId  - Client ID of the ClientSuccess Client
 		 * @returns {Object}         - ClientSuccess Client Data object
 		 */
-		getClient : async function(clientId) {
+		getClient : function(clientId) {
 			this.validateClientSuccessId(clientId);
 
 			return this.hitClientSuccessAPI('GET', `clients/${clientId}`);
@@ -111,7 +112,7 @@ JS.class(ClientSuccessClient, {
 		 * @returns {Object}          - ClientSuccess Client Data object
 		 */
 		getClientByExternalId : async function(externalId) {
-			if (!externalId || typeof externalId != 'string') {
+			if (!externalId || !_.isString(externalId)) {
 				throw new Error('Invalid externalId for getClientByExternalId.');
 			}
 
@@ -132,8 +133,8 @@ JS.class(ClientSuccessClient, {
 					return this.updateClient(foundClient.id, attributes, customAttributes);
 				}
 				catch (error) {
-					if (error != 'Error: Invalid request, status code: 404 - Not Found') {
-						throw new Error(error);
+					if (error.response.status != 404) {
+						throw error;
 					}
 					// Else, user was not found, therefore continue to creation
 				}
@@ -159,8 +160,8 @@ JS.class(ClientSuccessClient, {
 		 */
 		updateClient : async function(clientId, attributes, customAttributes) {
 			// ClientSuccess requires that all 'required' fields to be passed through to the update API
-			// First, get the current client state data, and only modify what is needing updating
 			this.validateClientSuccessId(clientId);
+			// First, get the current client state data, and only modify what is needing updating
 			const clientToUpdate = await this.getClient(clientId);
 			Object.assign(clientToUpdate, attributes);
 			this.patchCustomAttributes(clientToUpdate, customAttributes);
@@ -173,21 +174,21 @@ JS.class(ClientSuccessClient, {
 		 * @param  {Object} attributes
 		 * @return {Object} resulting upserted Client
 		 */
-		upsertClient : async function(clientId, attributes, customAttributes) {
-			if (arguments.length < 3 && _.isObject(clientId)) {
-				// only attributes are passed into the clientId slot, move it to the attributes slot
-				attributes   = clientId;
+		upsertClient : async function({ clientId = undefined, attributes = {}, customAttributes = {} } = {}) {
+			if (!clientId) {
+				// no client ID, create the user
 				const client = await this.createClient(attributes);
 				clientId     = client.id;
 				// create a check object to see if there is intention of updating the client
 				const updateClientAttributes = Object.assign({}, client); // clone the client object for comparason purposes
 				this.patchCustomAttributes(updateClientAttributes, customAttributes);
 				// check to see if a client update is required
-				if (JSON.stringify(Object.assign(updateClientAttributes, attributes)) == JSON.stringify(client)) {
+				if (_.isEqual(Object.assign(updateClientAttributes, attributes), client)) {
 					return client;
 				}
 			}
-			return clientId ? this.updateClient(clientId, attributes, customAttributes) : this.createClient(attributes, customAttributes);
+
+			return this.updateClient(clientId, attributes, customAttributes);
 		},
 
 		/**
@@ -273,15 +274,12 @@ JS.class(ClientSuccessClient, {
 		 * @param  {Object} customAttributes ClientSuccess Contact custom attributes to fill
 		 * @return {Object}                  Resulting Contact data object
 		 */
-		upsertContact : async function(clientId, contactId, attributes, customAttributes) {
+		upsertContact : async function({ clientId = undefined, contactId = undefined, attributes = {}, customAttributes = {} } = {}) {
 			this.validateClientSuccessId(clientId);
 
-			if (arguments.length < 4 && _.isObject(contactId)) {
-				// only attributes are passed into the clientId slot, move it to the attributes slot
-				customAttributes = attributes;
-				attributes       = contactId;
-				const contact    = await this.createContact(clientId, attributes, customAttributes);
-				contactId        = contact.id;
+			if (!contactId) {
+				const contact = await this.createContact(clientId, attributes, customAttributes);
+				contactId     = contact.id;
 				// check to see if system was intended to update the Contact object
 				let updateContactAttributes = Object.assign({}, contact); // clone the client object for comparason purposes
 				if (!_.get(updateContactAttributes, 'customFieldValues[0]')) {
@@ -297,13 +295,13 @@ JS.class(ClientSuccessClient, {
 				}
 			}
 
-			return contactId ? this.updateContact(clientId, contactId, attributes, customAttributes) : this.createContact(clientId, attributes, customAttributes);
+			return this.updateContact(clientId, contactId, attributes, customAttributes);
 		},
 
 		/**
 		 * Finds the Client Type ID associated with the ClientSuccess Client Type Title
 		 * @param  {String} clientTypeString - Title of the Client Type
-		 * @return {Number}                  - ID of the Client Typer
+		 * @return {Number}                  - ID of the Client Type
 		 */
 		getClientTypeId : async function(clientTypeString) {
 			if (!clientTypeString) {
@@ -315,13 +313,13 @@ JS.class(ClientSuccessClient, {
 			}
 
 			const clientType = _.find(this.clientTypes, { title : clientTypeString });
-			// const clientType = _.find(this.clientTypes, { title : clientTypeString });
 			return clientType.id;
 		},
 
 		/**
 		 * Helper function for patching a ClientSuccess object's custom attributes.
 		 * Uses the ClientSuccess 'Label' field for matching up the passed in custom attributes to the ClientSuccess Client/Contact object
+		 * @private
 		 * @param  {Object} object           - Object that is to be patched
 		 * @param  {Object} customAttributes - Object of custom attributes and their desired values (keyed on custom attribute label)
 		 */
@@ -339,13 +337,14 @@ JS.class(ClientSuccessClient, {
 
 		/**
 		 * Quickly validate if a value is valid to be sent to ClientSuccess
-		 * @param  {[type]} clientId [description]
-		 * @return {[type]}          [description]
+		 * @private
+		 * @param  {String} clientSuccessId ClientSuccess ID that is to be validated
 		 */
 		validateClientSuccessId : function(clientSuccessId) {
-			if (!clientSuccessId || isNaN(clientSuccessId)) {
+			if (!clientSuccessId || isNaN(parseInt(clientSuccessId)) || !isFinite(clientSuccessId) || clientSuccessId % 1 !== 0) {
 				throw new Error('Invalid ClientSuccess ID');
 			}
+			return true;
 		},
 	},
 });
