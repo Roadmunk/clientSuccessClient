@@ -113,7 +113,7 @@ JS.class(ClientSuccessClient, {
 		 */
 		getClientByExternalId : async function(externalId) {
 			if (!externalId || !_.isString(externalId)) {
-				throw new Error('Invalid externalId for getClientByExternalId.');
+				throw new Error({ status : 400, message : 'Invalid externalId for getClientByExternalId.' });
 			}
 
 			return this.hitClientSuccessAPI('GET', `clients/?externalId=${externalId}`);
@@ -133,7 +133,7 @@ JS.class(ClientSuccessClient, {
 					return this.updateClient(foundClient.id, attributes, customAttributes);
 				}
 				catch (error) {
-					if (error.response.status != 404) {
+					if (error.response.status !== 404) {
 						throw error;
 					}
 					// Else, user was not found, therefore continue to creation
@@ -342,7 +342,7 @@ JS.class(ClientSuccessClient, {
 		 */
 		validateClientSuccessId : function(clientSuccessId) {
 			if (!clientSuccessId || isNaN(parseInt(clientSuccessId)) || !isFinite(clientSuccessId) || clientSuccessId % 1 !== 0) {
-				throw new Error('Invalid ClientSuccess ID');
+				throw new Error({ status : 400, message : 'Invalid ClientSuccess ID' });
 			}
 			return true;
 		},

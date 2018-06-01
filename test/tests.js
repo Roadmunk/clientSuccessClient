@@ -110,7 +110,6 @@ describe('clientSuccessClient', function() {
 
 			const testClientAttributesInitial1 = {
 				name       : testUserName1,
-				statusId   : 1, // 1/Active, 2/Inactive, 3/Trial, 4/Terminated
 				externalId : testExtID,
 			};
 
@@ -119,7 +118,6 @@ describe('clientSuccessClient', function() {
 			const testUserName2 = `TEST user ${(new Date()).getTime()}2`;
 			const testClientAttributesInitial2 = {
 				name       : testUserName2,
-				statusId   : 1, // 1/Active, 2/Inactive, 3/Trial, 4/Terminated
 				externalId : testExtID,
 			};
 
@@ -163,8 +161,7 @@ describe('clientSuccessClient', function() {
 			const testUserName = `TEST user ${(new Date()).getTime()}`;
 
 			const testClientAttributesInitial = {
-				name     : testUserName,
-				statusId : 1, // 1/Active, 2/Inactive, 3/Trial, 4/Terminated
+				name : testUserName,
 			};
 
 			testClient = await CS.createClient(testClientAttributesInitial);
@@ -174,8 +171,7 @@ describe('clientSuccessClient', function() {
 			if (runWriteTests) {
 				// update test client with new attributes
 				const testClientAttributesNew = {
-					name     : `${testUserName}updated`,
-					statusId : 1, // 1/Active, 2/Inactive, 3/Trial, 4/Terminated
+					name : `${testUserName}updated`,
 				};
 
 				const updatedClient = await CS.updateClient(testClient.id, testClientAttributesNew);
@@ -192,8 +188,7 @@ describe('clientSuccessClient', function() {
 
 				// update test client with new attributes
 				const testClientAttributesNew = {
-					name     : `${testUserName}updated`,
-					statusId : 1, // 1/Active, 2/Inactive, 3/Trial, 4/Terminated
+					name : `${testUserName}updated`,
 				};
 
 				const updatedClient = await CS.updateClient(testClient.id, testClientAttributesNew);
@@ -216,11 +211,10 @@ describe('clientSuccessClient', function() {
 
 		it('Should fail if we pass in an invalid Cliet ID', async function() {
 			const testClientAttributesNew = {
-				name     : `${testUserName}updated`,
-				statusId : 1, // 1/Active, 2/Inactive, 3/Trial, 4/Terminated
+				name : `${testUserName}updated`,
 			};
 
-			expect(CS.updateClient('abc', testClientAttributesNew)).to.eventually.be.rejectedWith('Invalid ClientSuccess ID');
+			expect(CS.updateClient('abc', testClientAttributesNew)).to.eventually.be.rejectedWith({ status : 400 });
 		});
 
 		it('Should update custom attributes on the ClientSuccess Client object', async function() {
@@ -259,8 +253,7 @@ describe('clientSuccessClient', function() {
 			const testClientName = `TEST user ${(new Date()).getTime()}`;
 
 			const testClientAttributesInitial = {
-				name     : testClientName,
-				statusId : 1, // 1/Active, 2/Inactive, 3/Trial, 4/Terminated
+				name : testClientName,
 			};
 
 			testClient = await CS.createClient(testClientAttributesInitial);
@@ -367,8 +360,7 @@ describe('clientSuccessClient', function() {
 				// create test client
 				const newClientName = `TEST client ${(new Date()).getTime()}`;
 				const testClientAttributes = {
-					name     : newClientName,
-					statusId : 1,
+					name : newClientName,
 				};
 				// create the test client
 				const testClient = await CS.createClient(testClientAttributes);
@@ -410,8 +402,7 @@ describe('clientSuccessClient', function() {
 			// create test client
 			const newClientName = `TEST client ${(new Date()).getTime()}`;
 			const testClientAttributes = {
-				name     : newClientName,
-				statusId : 1,
+				name : newClientName,
 			};
 				// create the test client
 			testClient = await CS.createClient(testClientAttributes);
@@ -499,8 +490,7 @@ describe('clientSuccessClient', function() {
 			// create test client
 			const newClientName = `TEST client ${(new Date()).getTime()}`;
 			const testClientAttributes = {
-				name     : newClientName,
-				statusId : 1,
+				name : newClientName,
 			};
 			// create the test client
 			testClient = await CS.createClient(testClientAttributes);
@@ -555,7 +545,7 @@ describe('clientSuccessClient', function() {
 		});
 
 		it('should error when we pass an invalid data type in', async function() {
-			expect(CS.updateContact('abc', 'abc')).to.eventually.be.rejectedWith('Invalid ClientSuccess ID');
+			expect(CS.updateContact('abc', 'abc')).to.eventually.be.rejectedWith({ status : 400 });
 		});
 	});
 
@@ -570,8 +560,7 @@ describe('clientSuccessClient', function() {
 			// create test client
 			const newClientName = `TEST client ${(new Date()).getTime()}`;
 			const testClientAttributes = {
-				name     : newClientName,
-				statusId : 1,
+				name : newClientName,
 			};
 			// create the test client
 			testClient = await CS.createClient(testClientAttributes);
