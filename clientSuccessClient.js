@@ -177,18 +177,11 @@ JS.class(ClientSuccessClient, {
 		upsertClient : async function({ clientId = undefined, attributes = {}, customAttributes = {} } = {}) {
 			if (!clientId) {
 				// no client ID, create the user
-				const client = await this.createClient(attributes);
-				clientId     = client.id;
-				// create a check object to see if there is intention of updating the client
-				const updateClientAttributes = Object.assign({}, client); // clone the client object for comparason purposes
-				this.patchCustomAttributes(updateClientAttributes, customAttributes);
-				// check to see if a client update is required
-				if (_.isEqual(Object.assign(updateClientAttributes, attributes), client)) {
-					return client;
-				}
+				const createdClient = await this.createClient(attributes, customAttributes);
+				return this.getClient(createdClient.id); // return fresh model that includes custom attributes
 			}
-
-			return this.updateClient(clientId, attributes, customAttributes);
+			const updatedClient = await this.updateClient(clientId, attributes, customAttributes);
+			return this.getClient(updatedClient.id);
 		},
 
 		/**
