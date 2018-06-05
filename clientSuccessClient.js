@@ -8,6 +8,7 @@ const URL         = 'https://api.clientsuccess.com/v1/';
 const ClientSuccessClient  = module.exports                           = JS.class('ClientSuccessClient');
 const TooManyAttemptsError = ClientSuccessClient.TooManyAttemptsError = JS.class('TooManyAttemptsError');
 const AuthenticationError  = ClientSuccessClient.AuthenticationError  = JS.class('AuthenticationError');
+const NotFound             = ClientSuccessClient.NotFound             = JS.class('NotFound');
 
 JS.class(ClientSuccessClient, {
 	fields : {
@@ -84,6 +85,12 @@ JS.class(ClientSuccessClient, {
 					else if (error.response.status === 503) {
 						throw new Error('ClientSuccess Service Temporarily Unavailable');
 					}
+					else if (error.response.status === 417) {
+						throw new Error({ status : 417, message : 'Expectation Failed' });
+					}
+					else if (error.response.status === 404) {
+						throw new NotFound();
+					}
 					else {
 						// Package up the resulting API error for the function caller to handle on the other end
 						throw error;
@@ -132,7 +139,7 @@ JS.class(ClientSuccessClient, {
 					return this.updateClient(foundClient.id, attributes, customAttributes);
 				}
 				catch (error) {
-					if (error.response.status !== 404) {
+					if (error.status !== 404) {
 						throw error;
 					}
 					// Else, user was not found, therefore continue to creation
@@ -276,8 +283,6 @@ JS.class(ClientSuccessClient, {
 				let updateContactAttributes = Object.assign({}, contact); // clone the client object for comparason purposes
 				if (!_.get(updateContactAttributes, 'customFieldValues[0]')) {
 					// The ClientSuccess create contact API does not return back clean custom attributes, only null values
-					// Need to pull down a clean object using the getContact API to get around this
-					// A bug report has been filed with them
 					updateContactAttributes = await this.getContact(clientId, contactId);
 				}
 				this.patchCustomAttributes(updateContactAttributes, customAttributes);
@@ -354,5 +359,14 @@ JS.class(AuthenticationError, {
 
 	constructor : function() {
 		this.message = 'Authentication Error';
+	},
+});
+
+JS.class(NotFound, {
+	inherits : Error,
+
+	constructor : function() {
+		this.status = 404;
+		this.message = 'Not Found';
 	},
 });

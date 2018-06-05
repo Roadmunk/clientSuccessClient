@@ -63,7 +63,7 @@ describe('clientSuccessClient', function() {
 		});
 
 		it('should return back a 404 error object when the user does not exist', async function() {
-			return expect(CS.getClient(1)).to.eventually.be.rejectedWith('Request failed with status code 404');
+			return expect(CS.getClient(1)).to.eventually.be.rejectedWith({ status : 404 });
 
 		});
 	});
@@ -101,7 +101,7 @@ describe('clientSuccessClient', function() {
 					statusId : 'wrong', // 1/Active, 2/Inactive, 3/Trial, 4/Terminated
 				};
 
-				expect(CS.createClient(testClientAttributes)).to.eventually.be.rejectedWith('Request failed with status code 417');
+				expect(CS.createClient(testClientAttributes)).to.eventually.be.rejectedWith({ status : 417 });
 			}
 		});
 		it('should error out if a client currently exists with the same externalId', async function() {
@@ -206,7 +206,7 @@ describe('clientSuccessClient', function() {
 				statusId : 'wrong', // pass some invalid data
 			};
 
-			expect(CS.updateClient(testClient.id, testClientAttributesNew)).to.eventually.be.rejectedWith('Request failed with status code 417');
+			expect(CS.updateClient(testClient.id, testClientAttributesNew)).to.eventually.be.rejectedWith({ status : 417 });
 		});
 
 		it('should fail if we pass in an invalid Cliet ID', async function() {
@@ -386,7 +386,7 @@ describe('clientSuccessClient', function() {
 		it('should return back a 404 error object when the contact does not exist', async function() {
 			this.timeout(15000);
 			// using Client ID 90185858 that does actually exist, with a 0 contact ID that does not
-			expect(CS.getContact(90185858, 123)).to.eventually.be.rejectedWith('Request failed with status code 404');
+			expect(CS.getContact(90185858, 123)).to.eventually.be.rejectedWith({ status : 404 });
 		});
 
 		it('should throw an error when we pass an invalid data type in');
@@ -694,6 +694,12 @@ describe('clientSuccessClient', function() {
 
 		it('should throw an error on invalid data', async function() {
 			expect(CS.getClientTypeId()).to.eventually.be.rejectedWith('No clientTypeString provided in getClientTypeId');
+		});
+	});
+
+	describe('getClientByExternalId', async function() {
+		it('should error with 404 if the external ID does not exist', async function() {
+			expect(CS.getClientByExternalId('123456')).to.eventually.be.rejectedWith({ status : 404 });
 		});
 	});
 
