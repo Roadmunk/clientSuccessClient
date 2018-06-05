@@ -34,7 +34,7 @@ describe('clientSuccessClient', function() {
 
 		it('should throw an error when given bad credentials', async function() {
 			const client = new ClientSuccess('wrong', 'wrong'); // wrong combo
-			return expect(client.authenticate()).to.eventually.be.rejectedWith('Authentication Error');
+			return expect(client.authenticate()).to.eventually.be.rejectedWith({ status : 401 });
 		});
 	});
 
@@ -63,15 +63,8 @@ describe('clientSuccessClient', function() {
 		});
 
 		it('should return back a 404 error object when the user does not exist', async function() {
-			// testClient = await CS.getClient(1); // invalid client ID
+			return expect(CS.getClient(1)).to.eventually.be.rejectedWith({ status : 404 });
 
-			return expect(CS.getClient(1)).to.eventually.be.rejectedWith('Not Found');
-
-		});
-
-		it('should throw an error when we pass an invalid data type in', async function() {
-			// pass invalid data type
-			expect(CS.getClient('string')).to.eventually.be.rejectedWith('Invalid clientId data type for getClient, expecting integer');
 		});
 	});
 
@@ -108,16 +101,15 @@ describe('clientSuccessClient', function() {
 					statusId : 'wrong', // 1/Active, 2/Inactive, 3/Trial, 4/Terminated
 				};
 
-				expect(CS.createClient(testClientAttributes)).to.eventually.be.rejectedWith('Expectation Failed');
+				expect(CS.createClient(testClientAttributes)).to.eventually.be.rejectedWith({ status : 417 });
 			}
 		});
-		it('Should not create a new client if one currently exists with the same externalId', async function() {
+		it('should not create a brand new Client, but should update the existing when creating a Client with matching External ID as an existing Client', async function() {
 			const testUserName1 = `TEST user ${(new Date()).getTime()}`;
 			const testExtID     = `${(new Date()).getTime()}test`;
 
 			const testClientAttributesInitial1 = {
 				name       : testUserName1,
-				statusId   : 1, // 1/Active, 2/Inactive, 3/Trial, 4/Terminated
 				externalId : testExtID,
 			};
 
@@ -126,16 +118,16 @@ describe('clientSuccessClient', function() {
 			const testUserName2 = `TEST user ${(new Date()).getTime()}2`;
 			const testClientAttributesInitial2 = {
 				name       : testUserName2,
-				statusId   : 1, // 1/Active, 2/Inactive, 3/Trial, 4/Terminated
 				externalId : testExtID,
 			};
 
 			const testClient2 = await CS.createClient(testClientAttributesInitial2);
 
-			expect(testClient2.name).to.equal(testUserName1); // it should still equal the initial name
+			expect(testClient2.id).to.equal(testClient.id); // it should still equal the initial client ID
+			expect(testClient2.name).to.equal(testUserName2);
 		});
 
-		it('Should create a new fresh Client with custom attribtues', async function() {
+		it('should create a new fresh Client with custom attribtues', async function() {
 			this.timeout(15000);
 			const newUserName = `TEST user ${(new Date()).getTime()}`;
 			const testExtID     = `${(new Date()).getTime()}test2`;
@@ -157,10 +149,7 @@ describe('clientSuccessClient', function() {
 			expect(createdCustomUser.name).to.equal(newUserName);
 			// account notes is currently in array position 0
 			expect(createdCustomUser.customFieldValues[0].value).equal(`${newUserName} note`);
- 		});
-
-		it('Should not create a new client if one currently exists with the same externalID, but should update the attributes, and custom attributes');
-
+		});
 	});
 
 	describe('updateClient', async function() {
@@ -172,8 +161,7 @@ describe('clientSuccessClient', function() {
 			const testUserName = `TEST user ${(new Date()).getTime()}`;
 
 			const testClientAttributesInitial = {
-				name     : testUserName,
-				statusId : 1, // 1/Active, 2/Inactive, 3/Trial, 4/Terminated
+				name : testUserName,
 			};
 
 			testClient = await CS.createClient(testClientAttributesInitial);
@@ -183,8 +171,7 @@ describe('clientSuccessClient', function() {
 			if (runWriteTests) {
 				// update test client with new attributes
 				const testClientAttributesNew = {
-					name     : `${testUserName}updated`,
-					statusId : 1, // 1/Active, 2/Inactive, 3/Trial, 4/Terminated
+					name : `${testUserName}updated`,
 				};
 
 				const updatedClient = await CS.updateClient(testClient.id, testClientAttributesNew);
@@ -201,8 +188,7 @@ describe('clientSuccessClient', function() {
 
 				// update test client with new attributes
 				const testClientAttributesNew = {
-					name     : `${testUserName}updated`,
-					statusId : 1, // 1/Active, 2/Inactive, 3/Trial, 4/Terminated
+					name : `${testUserName}updated`,
 				};
 
 				const updatedClient = await CS.updateClient(testClient.id, testClientAttributesNew);
@@ -214,18 +200,24 @@ describe('clientSuccessClient', function() {
 		});
 
 		it('should gracefully fail with a Expectation Failed object when we pass an invalid data type in', async function() {
-			if (runWriteTests) {
-				// update test client with new attributes
-				const testClientAttributesNew = {
-					name     : `${testUserName}updated`,
-					statusId : 'wrong', // pass some invalid data
-				};
+			// update test client with new attributes
+			const testClientAttributesNew = {
+				name     : `${testUserName}updated`,
+				statusId : 'wrong', // pass some invalid data
+			};
 
-				expect(CS.updateClient(testClient.id, testClientAttributesNew)).to.eventually.be.rejectedWith('Expectation Failed');
-			}
+			expect(CS.updateClient(testClient.id, testClientAttributesNew)).to.eventually.be.rejectedWith({ status : 417 });
 		});
 
-		it('Should update custom attributes on the ClientSuccess Client object', async function() {
+		it('should fail if we pass in an invalid Cliet ID', async function() {
+			const testClientAttributesNew = {
+				name : `${testUserName}updated`,
+			};
+
+			expect(CS.updateClient('abc', testClientAttributesNew)).to.eventually.be.rejectedWith({ status : 400 });
+		});
+
+		it('should update custom attributes on the ClientSuccess Client object', async function() {
 			const testClientAttributesNew = {
 				name : `${testUserName}updated`,
 			};
@@ -261,8 +253,7 @@ describe('clientSuccessClient', function() {
 			const testClientName = `TEST user ${(new Date()).getTime()}`;
 
 			const testClientAttributesInitial = {
-				name     : testClientName,
-				statusId : 1, // 1/Active, 2/Inactive, 3/Trial, 4/Terminated
+				name : testClientName,
 			};
 
 			testClient = await CS.createClient(testClientAttributesInitial);
@@ -280,43 +271,55 @@ describe('clientSuccessClient', function() {
 			}
 		});
 
-		it('Should automatically create a Client if there is an undefined clientId present in the function arguments', async function() {
-			const upsertedClientTestName = `TEST user ${(new Date()).getTime()}`;
-			upsertedClient = await CS.upsertClient(undefined, {
-				name : upsertedClientTestName,
-			});
-			upsertedClientArray.push(upsertedClient.id); // queue this client to be cleaned
-			expect(upsertedClient.name).to.equal(upsertedClientTestName);
-		});
-
-		it('Should automatically create a Client if there is a blank clientId present in the function arguments', async function() {
-			const upsertedClientTestName = `TEST user ${(new Date()).getTime()}`;
-			upsertedClient = await CS.upsertClient('', {
-				name : upsertedClientTestName,
-			});
-			upsertedClientArray.push(upsertedClient.id); // queue this client to be cleaned
-			expect(upsertedClient.name).to.equal(upsertedClientTestName);
-		});
-
-		it('Should automatically create a Client if only attributes are passed in', async function() {
+		it('should automatically create a Client if there is an undefined clientId present in the function arguments', async function() {
 			const upsertedClientTestName = `TEST user ${(new Date()).getTime()}`;
 			upsertedClient = await CS.upsertClient({
-				name : upsertedClientTestName,
+				clientId   : undefined,
+				attributes : {
+					name : upsertedClientTestName,
+				},
 			});
 			upsertedClientArray.push(upsertedClient.id); // queue this client to be cleaned
 			expect(upsertedClient.name).to.equal(upsertedClientTestName);
 		});
 
-		it('Should update an existing Client if a clientId is passed', async function() {
-			const updatedTestClientName = `${testClient.name} updated`;
-			upsertedClient = await CS.upsertClient(testClient.id, {
-				name : updatedTestClientName,
+		it('should automatically create a Client if there is a blank clientId present in the function arguments', async function() {
+			const upsertedClientTestName = `TEST user ${(new Date()).getTime()}`;
+			upsertedClient = await CS.upsertClient({
+				clientId   : '',
+				attributes : {
+					name : upsertedClientTestName,
+				},
+			});
+			upsertedClientArray.push(upsertedClient.id); // queue this client to be cleaned
+			expect(upsertedClient.name).to.equal(upsertedClientTestName);
+		});
+
+		it('should automatically create a Client if only attributes are passed in', async function() {
+			const upsertedClientTestName = `TEST user ${(new Date()).getTime()}`;
+			upsertedClient = await CS.upsertClient({
+				attributes : {
+					name : upsertedClientTestName,
+				},
+			});
+			upsertedClientArray.push(upsertedClient.id); // queue this client to be cleaned
+			expect(upsertedClient.name).to.equal(upsertedClientTestName);
+		});
+
+		it('should update an existing Client if a clientId is passed', async function() {
+			const updatedTestClientName = `TEST user ${(new Date()).getTime()} updated`;
+			upsertedClient = await CS.upsertClient({
+				clientId   : testClient.id,
+				attributes : {
+					name : updatedTestClientName,
+				},
 			});
 			upsertedClientArray.push(upsertedClient.id); // queue this client to be cleaned
 			expect(upsertedClient.name).to.equal(updatedTestClientName);
 		});
 
-		it('Should create a new Client with custom attributes', async function() {
+		it('should create a new Client with custom attributes', async function() {
+			this.timeout(15000);
 			// SHOULDDO: define custom fields and order in config.js file, and use this isntead of hard coded values
 			const updatedTestClientName = `${testClient.name} updated`;
 			const upsertClientAttributes = {
@@ -325,17 +328,23 @@ describe('clientSuccessClient', function() {
 			const upsertClientCustomAttributes = {
 				'Account Notes' : 'Test Notes',
 			};
-			upsertedClient = await CS.upsertClient(testClient.id, upsertClientAttributes, upsertClientCustomAttributes);
+			upsertedClient = await CS.upsertClient({
+				attributes       : upsertClientAttributes,
+				customAttributes : upsertClientCustomAttributes,
+			});
 			upsertedClientArray.push(upsertedClient.id); // queue this client to be cleaned
 			// pull down detailed client model
-			upsertedClient = await CS.getClient(testClient.id);
 			expect(upsertedClient.name).to.equal(updatedTestClientName);
 			expect(upsertedClient.customFieldValues[0].value).to.equal('Test Notes');
 		});
 
-		it('Should update an existing Client with custom attribtues', async function() {
+		it('should update an existing Client with custom attribtues', async function() {
 			// TODO: this is dependent on the custom fields that are exposed to the ClientSuccess API
-			await CS.upsertClient(testClient.id, { name : `${testClient.name}updated` }, { 'Account Notes' : testClient.name });
+			await CS.upsertClient({
+				clientId         : testClient.id,
+				attributes       : { name : `${testClient.name}updated` },
+				customAttributes : { 'Account Notes' : testClient.name },
+			});
 			// pull back down the user object
 			const upsertedCustomClient = await CS.getClient(testClient.id);
 			expect(upsertedCustomClient.name).to.equal(`${testClient.name}updated`);
@@ -349,8 +358,7 @@ describe('clientSuccessClient', function() {
 				// create test client
 				const newClientName = `TEST client ${(new Date()).getTime()}`;
 				const testClientAttributes = {
-					name     : newClientName,
-					statusId : 1,
+					name : newClientName,
 				};
 				// create the test client
 				const testClient = await CS.createClient(testClientAttributes);
@@ -378,7 +386,7 @@ describe('clientSuccessClient', function() {
 		it('should return back a 404 error object when the contact does not exist', async function() {
 			this.timeout(15000);
 			// using Client ID 90185858 that does actually exist, with a 0 contact ID that does not
-			expect(CS.getContact(90185858, 0)).to.eventually.be.rejectedWith('Not Found');
+			expect(CS.getContact(90185858, 123)).to.eventually.be.rejectedWith({ status : 404 });
 		});
 
 		it('should throw an error when we pass an invalid data type in');
@@ -392,8 +400,7 @@ describe('clientSuccessClient', function() {
 			// create test client
 			const newClientName = `TEST client ${(new Date()).getTime()}`;
 			const testClientAttributes = {
-				name     : newClientName,
-				statusId : 1,
+				name : newClientName,
 			};
 				// create the test client
 			testClient = await CS.createClient(testClientAttributes);
@@ -420,7 +427,7 @@ describe('clientSuccessClient', function() {
 			expect(testContact.id).to.be.a('number');
 		});
 
-		it.skip('Should not create a new contact if it has already been created under this client', async function() {
+		it.skip('should not create a new contact if it has already been created under this client', async function() {
 			// TODO: revisit the implementation of this functionality.
 			// The complexity here is when we check for a duplicate already under the account, we need external ID of the client
 			// to search by email. For this function, we probably only want to pass either clientId or external ID. Passing both is
@@ -442,7 +449,7 @@ describe('clientSuccessClient', function() {
 			expect(testContact1.id).to.equal(testContact2);
 		});
 
-		it('Should create a contact with custom attributes passed', async function() {
+		it('should create a contact with custom attributes passed', async function() {
 			this.timeout(15000);
 			// create a test contact
 			const newContactName = `TEST user ${(new Date()).getTime()}`;
@@ -481,8 +488,7 @@ describe('clientSuccessClient', function() {
 			// create test client
 			const newClientName = `TEST client ${(new Date()).getTime()}`;
 			const testClientAttributes = {
-				name     : newClientName,
-				statusId : 1,
+				name : newClientName,
 			};
 			// create the test client
 			testClient = await CS.createClient(testClientAttributes);
@@ -517,7 +523,7 @@ describe('clientSuccessClient', function() {
 			expect(updatedContact.firstName).to.equal(`${newContactName}updated`);
 		});
 
-		it('Should update a contact with custom attributes passed in', async function() {
+		it('should update a contact with custom attributes passed in', async function() {
 			const testExtID                = `${(new Date()).getTime()}test`;
 			const testContactAttributesNew = {
 				firstName : `${newContactName}updated`,
@@ -536,7 +542,9 @@ describe('clientSuccessClient', function() {
 			expect(updatedContact.customFieldValues[1].value).to.equal(testExtID);
 		});
 
-		it('should error when we pass an invalid data type in');
+		it('should error when we pass an invalid data type in', async function() {
+			expect(CS.updateContact('abc', 'abc')).to.eventually.be.rejectedWith({ status : 400 });
+		});
 	});
 
 	describe('upsertContact', async function() {
@@ -550,8 +558,7 @@ describe('clientSuccessClient', function() {
 			// create test client
 			const newClientName = `TEST client ${(new Date()).getTime()}`;
 			const testClientAttributes = {
-				name     : newClientName,
-				statusId : 1,
+				name : newClientName,
 			};
 			// create the test client
 			testClient = await CS.createClient(testClientAttributes);
@@ -574,48 +581,63 @@ describe('clientSuccessClient', function() {
 			CS.closeClient(testClient.id);
 		});
 
-		it('Should automatically create a Contact if there is an undefined contactId present in the function arguments', async function() {
+		it('should automatically create a Contact if there is an undefined contactId present in the function arguments', async function() {
 			const upsertedContactTestName = `TEST ${(new Date()).getTime()}`;
-			const upsertedContact = await CS.upsertContact(testClient.id, undefined, {
-				firstName : upsertedContactTestName,
-				lastName  : upsertedContactTestName,
+			const upsertedContact = await CS.upsertContact({
+				clientId   : testClient.id,
+				attributes : {
+					firstName : upsertedContactTestName,
+					lastName  : upsertedContactTestName,
+				},
 			});
 			expect(upsertedContact.firstName).to.equal(upsertedContactTestName);
 			expect(upsertedContact.lastName).to.equal(upsertedContactTestName);
 		});
 
-		it('Should automatically create a Contact if there is a blank contactId present in the function arguments', async function() {
+		it('should automatically create a Contact if there is a blank contactId present in the function arguments', async function() {
 			const upsertedContactTestName = `TEST ${(new Date()).getTime()} test2`;
-			const upsertedContact = await CS.upsertContact(testClient.id, '', {
-				firstName : upsertedContactTestName,
-				lastName  : upsertedContactTestName,
+			const upsertedContact = await CS.upsertContact({
+				clientId   : testClient.id,
+				contactId  : '',
+				attributes : {
+					firstName : upsertedContactTestName,
+					lastName  : upsertedContactTestName,
+				},
 			});
 			expect(upsertedContact.firstName).to.equal(upsertedContactTestName);
 			expect(upsertedContact.lastName).to.equal(upsertedContactTestName);
 		});
 
-		it('Should automatically create a Contact if only attributes are passed in', async function() {
+		it('should automatically create a Contact if only attributes are passed in', async function() {
+			this.timeout(15000);
 			const upsertedContactTestName = `TEST ${(new Date()).getTime()} test3`;
-			const upsertedContact = await CS.upsertContact(testClient.id, {
-				firstName : upsertedContactTestName,
-				lastName  : upsertedContactTestName,
+			const upsertedContact = await CS.upsertContact({
+				clientId   : testClient.id,
+				attributes : {
+					firstName : upsertedContactTestName,
+					lastName  : upsertedContactTestName,
+				},
 			});
 			expect(upsertedContact.firstName).to.equal(upsertedContactTestName);
 			expect(upsertedContact.lastName).to.equal(upsertedContactTestName);
 		});
 
-		it('Should update an existing Contact if a contactId is passed', async function() {
+		it('should update an existing Contact if a contactId is passed', async function() {
 			const upsertedContactTestName = `TEST ${(new Date()).getTime()} test4`;
-			const upsertedContact = await CS.upsertContact(testClient.id, testContact.id, {
-				firstName : upsertedContactTestName,
-				lastName  : upsertedContactTestName,
+			const upsertedContact = await CS.upsertContact({
+				clientId   : testClient.id,
+				contactId  : testContact.id,
+				attributes : {
+					firstName : upsertedContactTestName,
+					lastName  : upsertedContactTestName,
+				},
 			});
 			expect(upsertedContact.id).to.equal(testContact.id);
 			expect(upsertedContact.firstName).to.equal(upsertedContactTestName);
 			expect(upsertedContact.lastName).to.equal(upsertedContactTestName);
 		});
 
-		it('Should create a new Contact with custom attributes', async function() {
+		it('should create a new Contact with custom attributes', async function() {
 			this.timeout(15000);
 			const upsertedContactTestName = `TEST ${(new Date()).getTime()} test5`;
 			const testExtID               = `${(new Date()).getTime()}test`;
@@ -626,7 +648,11 @@ describe('clientSuccessClient', function() {
 			const contactCustomAttributes = {
 				'External ID' : testExtID,
 			};
-			let upsertedContact = await CS.upsertContact(testClient.id, contactAttributes, contactCustomAttributes);
+			let upsertedContact = await CS.upsertContact({
+				clientId         : testClient.id,
+				attributes       : contactAttributes,
+				customAttributes : contactCustomAttributes,
+			});
 			// pull down full contact detail object
 			upsertedContact = await CS.getContact(testClient.id, upsertedContact.id);
 			expect(upsertedContact.firstName).to.equal(upsertedContactTestName);
@@ -634,7 +660,7 @@ describe('clientSuccessClient', function() {
 			expect(upsertedContact.customFieldValues[1].value).to.equal(testExtID);
 		});
 
-		it('Should update an existing Contact with custom attribtues', async function() {
+		it('should update an existing Contact with custom attribtues', async function() {
 			const upsertedContactTestName = `TEST ${(new Date()).getTime()} test5`;
 			const testExtID               = `${(new Date()).getTime()}test`;
 			const newContactAttributes = {
@@ -644,7 +670,12 @@ describe('clientSuccessClient', function() {
 			const newContactCustomAttributes = {
 				'External ID' : `${testExtID}updated`,
 			};
-			let upsertedContact = await CS.upsertContact(testClient.id, testContact.id, newContactAttributes, newContactCustomAttributes);
+			let upsertedContact = await CS.upsertContact({
+				clientId         : testClient.id,
+				contactId        : testContact.id,
+				attributes       : newContactAttributes,
+				customAttributes : newContactCustomAttributes,
+			});
 			// pull down full contact detail object
 			upsertedContact = await CS.getContact(testClient.id, upsertedContact.id);
 			expect(upsertedContact.id).to.equal(testContact.id);
@@ -655,14 +686,20 @@ describe('clientSuccessClient', function() {
 	});
 
 	describe('getClientTypeId', async function() {
-		it('Should return back the appropriate client type ID when a client type label is passed', async function() {
+		it('should return back the appropriate client type ID when a client type label is passed', async function() {
 			this.timeout(15000);
 			const businessClientTypeId = await CS.getClientTypeId('Business');
 			expect(businessClientTypeId).to.equal(3535);
 		});
 
-		it('Should throw an error on invalid data', async function() {
-			expect(CS.getClientTypeId()).to.eventually.be.rejectedWith('No clientTypeString provided in getClientTypeId');
+		it('should throw an error on invalid data', async function() {
+			expect(CS.getClientTypeId()).to.eventually.be.rejectedWith({ status : 400 });
+		});
+	});
+
+	describe('getClientByExternalId', async function() {
+		it('should error with 404 if the external ID does not exist', async function() {
+			expect(CS.getClientByExternalId('123456')).to.eventually.be.rejectedWith({ status : 404 });
 		});
 	});
 
