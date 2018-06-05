@@ -585,7 +585,6 @@ describe('clientSuccessClient', function() {
 			const upsertedContactTestName = `TEST ${(new Date()).getTime()}`;
 			const upsertedContact = await CS.upsertContact({
 				clientId   : testClient.id,
-				contactId  : undefined,
 				attributes : {
 					firstName : upsertedContactTestName,
 					lastName  : upsertedContactTestName,

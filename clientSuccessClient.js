@@ -86,7 +86,6 @@ JS.class(ClientSuccessClient, {
 					}
 					else {
 						// Package up the resulting API error for the function caller to handle on the other end
-						// throw new Error(`Invalid request, status code: ${error.response.status} - ${error.response.statusText}`);
 						throw error;
 					}
 				}
