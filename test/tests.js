@@ -104,7 +104,7 @@ describe('clientSuccessClient', function() {
 				expect(CS.createClient(testClientAttributes)).to.eventually.be.rejectedWith({ status : 417 });
 			}
 		});
-		it('should error out if a client currently exists with the same externalId', async function() {
+		it('should not create a brand new Client, but should update the existing when creating a Client with matching External ID as an existing Client', async function() {
 			const testUserName1 = `TEST user ${(new Date()).getTime()}`;
 			const testExtID     = `${(new Date()).getTime()}test`;
 
