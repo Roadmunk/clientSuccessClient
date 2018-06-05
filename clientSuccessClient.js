@@ -5,10 +5,8 @@ const _     = require('lodash');
 const RETRY_LIMIT = 10;	// number of retry attempts for any given API call
 const URL         = 'https://api.clientsuccess.com/v1/';
 
-const ClientSuccessClient  = module.exports                           = JS.class('ClientSuccessClient');
-const TooManyAttemptsError = ClientSuccessClient.TooManyAttemptsError = JS.class('TooManyAttemptsError');
-const AuthenticationError  = ClientSuccessClient.AuthenticationError  = JS.class('AuthenticationError');
-const NotFound             = ClientSuccessClient.NotFound             = JS.class('NotFound');
+const ClientSuccessClient = module.exports                  = JS.class('ClientSuccessClient');
+const CustomError         = ClientSuccessClient.CustomError = JS.class('CustomError');
 
 JS.class(ClientSuccessClient, {
 	fields : {
@@ -43,10 +41,10 @@ JS.class(ClientSuccessClient, {
 			}
 			catch (error) {
 				if (error.response.status == 401) {
-					throw new AuthenticationError();
+					throw new CustomError({ status : 401, message : 'Authentication Error' });
 				}
 
-				throw new Error(`Invalid request, status code: ${error.response.status} - ${error.response.statusText}`);
+				throw new CustomError({ status : 400, message : 'Invalid Request' });
 			}
 		},
 
@@ -83,13 +81,13 @@ JS.class(ClientSuccessClient, {
 						this.authToken = null;
 					}
 					else if (error.response.status === 503) {
-						throw new Error('ClientSuccess Service Temporarily Unavailable');
+						throw new CustomError({ status : 503, message : 'Service Temporarily Unavailable' });
 					}
 					else if (error.response.status === 417) {
-						throw new Error({ status : 417, message : 'Expectation Failed' });
+						throw new CustomError({ status : 417, message : 'Expectation Failed' });
 					}
 					else if (error.response.status === 404) {
-						throw new NotFound();
+						throw new CustomError({ status : 404, message : 'Not Found' });
 					}
 					else {
 						// Package up the resulting API error for the function caller to handle on the other end
@@ -98,7 +96,7 @@ JS.class(ClientSuccessClient, {
 				}
 			}
 
-			throw new TooManyAttemptsError();
+			throw new CustomError(429, 'Too Many Requests');
 		},
 
 		/**
@@ -119,7 +117,7 @@ JS.class(ClientSuccessClient, {
 		 */
 		getClientByExternalId : async function(externalId) {
 			if (!externalId || !_.isString(externalId)) {
-				throw new Error({ status : 400, message : 'Invalid externalId for getClientByExternalId.' });
+				throw new CustomError({ status : 400, message : 'Invalid externalId for getClientByExternalId.' });
 			}
 
 			return this.hitClientSuccessAPI('GET', `clients/?externalId=${externalId}`);
@@ -182,7 +180,7 @@ JS.class(ClientSuccessClient, {
 		 */
 		upsertClient : async function({ clientId = undefined, attributes = {}, customAttributes = {} } = {}) {
 			if (!clientId) {
-				// no client ID, create the user
+				// no client ID, create the Client
 				const createdClient = await this.createClient(attributes, customAttributes);
 				return this.getClient(createdClient.id); // return fresh model that includes custom attributes
 			}
@@ -279,8 +277,7 @@ JS.class(ClientSuccessClient, {
 			if (!contactId) {
 				const contact = await this.createContact(clientId, attributes, customAttributes);
 				contactId     = contact.id;
-				// check to see if system was intended to update the Contact object
-				let updateContactAttributes = Object.assign({}, contact); // clone the client object for comparason purposes
+				let updateContactAttributes = Object.assign({}, contact); // clone the client object for comparison purposes
 				if (!_.get(updateContactAttributes, 'customFieldValues[0]')) {
 					// The ClientSuccess create contact API does not return back clean custom attributes, only null values
 					updateContactAttributes = await this.getContact(clientId, contactId);
@@ -302,7 +299,7 @@ JS.class(ClientSuccessClient, {
 		 */
 		getClientTypeId : async function(clientTypeString) {
 			if (!clientTypeString) {
-				throw new Error({ status : 400, message : 'No clientTypeString provided in getClientTypeId' });
+				throw new CustomError({ status : 400, message : 'No clientTypeString provided in getClientTypeId' });
 			}
 
 			if (!this.clientTypes) {
@@ -339,35 +336,17 @@ JS.class(ClientSuccessClient, {
 		 */
 		validateClientSuccessId : function(clientSuccessId) {
 			if (!clientSuccessId || isNaN(parseInt(clientSuccessId)) || !isFinite(clientSuccessId) || clientSuccessId % 1 !== 0) {
-				throw new Error({ status : 400, message : 'Invalid ClientSuccess ID' });
+				throw new CustomError({ status : 400, message : 'Invalid ClientSuccess ID' });
 			}
-			return true;
 		},
 	},
 });
 
-JS.class(TooManyAttemptsError, {
+JS.class(CustomError, {
 	inherits : Error,
 
-	constructor : function() {
-		this.message = 'Too Many Requests';
-	},
-});
-
-JS.class(AuthenticationError, {
-	inherits : Error,
-
-	constructor : function() {
-		this.status  = 401;
-		this.message = 'Authentication Error';
-	},
-});
-
-JS.class(NotFound, {
-	inherits : Error,
-
-	constructor : function() {
-		this.status  = 404;
-		this.message = 'Not Found';
+	constructor : function({ status, message }) {
+		this.status  = status;
+		this.message = message;
 	},
 });
