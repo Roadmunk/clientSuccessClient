@@ -34,7 +34,7 @@ describe('clientSuccessClient', function() {
 
 		it('should throw an error when given bad credentials', async function() {
 			const client = new ClientSuccess('wrong', 'wrong'); // wrong combo
-			return expect(client.authenticate()).to.eventually.be.rejectedWith('Authentication Error');
+			return expect(client.authenticate()).to.eventually.be.rejectedWith({ status : 401 });
 		});
 	});
 
@@ -693,7 +693,7 @@ describe('clientSuccessClient', function() {
 		});
 
 		it('should throw an error on invalid data', async function() {
-			expect(CS.getClientTypeId()).to.eventually.be.rejectedWith('No clientTypeString provided in getClientTypeId');
+			expect(CS.getClientTypeId()).to.eventually.be.rejectedWith({ status : 400 });
 		});
 	});
 

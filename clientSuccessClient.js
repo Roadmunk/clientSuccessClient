@@ -302,7 +302,7 @@ JS.class(ClientSuccessClient, {
 		 */
 		getClientTypeId : async function(clientTypeString) {
 			if (!clientTypeString) {
-				throw new Error('No clientTypeString provided in getClientTypeId');
+				throw new Error({ status : 400, message : 'No clientTypeString provided in getClientTypeId' });
 			}
 
 			if (!this.clientTypes) {
@@ -358,6 +358,7 @@ JS.class(AuthenticationError, {
 	inherits : Error,
 
 	constructor : function() {
+		this.status  = 401;
 		this.message = 'Authentication Error';
 	},
 });
@@ -366,7 +367,7 @@ JS.class(NotFound, {
 	inherits : Error,
 
 	constructor : function() {
-		this.status = 404;
+		this.status  = 404;
 		this.message = 'Not Found';
 	},
 });
