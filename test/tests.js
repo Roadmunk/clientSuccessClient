@@ -8,6 +8,8 @@ const config = require('./config');
 
 chai.use(require('chai-as-promised'));
 
+const customTimeout = ms => new Promise(res => setTimeout(res, ms));
+
 // process.on('unhandledRejection', (reason, p) => {
 //	console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
 //	// application specific logging, throwing an error, or other logic here
@@ -392,6 +394,54 @@ describe('clientSuccessClient', function() {
 		it('should throw an error when we pass an invalid data type in');
 	});
 
+	describe('getContactByEmail', async function() {
+		let testClient;
+
+		before(async function() {
+			this.timeout(15000);
+			// create test client
+			const newClientName = `TEST client ${(new Date()).getTime()}`;
+			const testExtID     = `${(new Date()).getTime()}test`;
+			const testClientAttributes = {
+				name       : newClientName,
+				externalId : testExtID,
+			};
+			// create the test client
+			testClient = await CS.createClient(testClientAttributes);
+		});
+
+		after(async function() {
+			// clean up the test client we created
+			await CS.closeClient(testClient.id);
+		});
+
+		it('should find a contact that contains a plus sign', async function() {
+			// create a test contact
+			const newContactName = `TEST user ${(new Date()).getTime()}`;
+			const newContactEmail = 'testemail+plus@roadmunk.com';
+			const testContactAttributes = {
+				firstName : newContactName,
+				lastName  : newContactName,
+				email     : newContactEmail,
+			};
+			const testContact = await CS.createContact(testClient.id, testContactAttributes);
+
+			// try grabbing the contact
+			const foundContact = await CS.getContactByEmail(testClient.externalId, testContact.email);
+
+			expect(foundContact.id).to.equal(testContact.id);
+		});
+
+		it('should return a 404 if the contact does not exist', async function() {
+			try {
+				await CS.getContactByEmail(testClient.externalId, 'doesnotexist@test.com');
+			}
+			catch (error) {
+				expect(error.status).to.equal(404);
+			}
+		});
+	});
+
 	describe('createContact', async function() {
 		let testClient;
 
@@ -412,41 +462,15 @@ describe('clientSuccessClient', function() {
 		});
 
 		it('should create a new test contact', async function() {
-			// create a test client
+			// create a test contact
 			const newContactName = `TEST user ${(new Date()).getTime()}`;
-
-			// create a new contact in this test client
 			const testContactAttributes = {
 				firstName : newContactName,
 				lastName  : newContactName,
 			};
-
-			// create the test client
 			const testContact = await CS.createContact(testClient.id, testContactAttributes);
 
 			expect(testContact.id).to.be.a('number');
-		});
-
-		it.skip('should not create a new contact if it has already been created under this client', async function() {
-			// TODO: revisit the implementation of this functionality.
-			// The complexity here is when we check for a duplicate already under the account, we need external ID of the client
-			// to search by email. For this function, we probably only want to pass either clientId or external ID. Passing both is
-			// messy
-			const newContactName  = `TEST user ${(new Date()).getTime()}`;
-			const newContactEmail = `testuser${(new Date()).getTime()}@roadmunk.com`;
-
-			// create a new contact in this test client
-			const testContactAttributes = {
-				firstName : newContactName,
-				lastName  : newContactName,
-				email     : newContactEmail,
-			};
-
-			// create the test contact
-			const testContact1 = await CS.createContact(testClient.id, testContactAttributes);
-			const testContact2 = await CS.createContact(testClient.id, testContactAttributes);
-			// we would expect that the query does not create a new user if we are attempting to create a duplciate
-			expect(testContact1.id).to.equal(testContact2);
 		});
 
 		it('should create a contact with custom attributes passed', async function() {
@@ -553,12 +577,13 @@ describe('clientSuccessClient', function() {
 		let newContactName;
 
 		before(async function() {
-			// create a test client to work with
 			this.timeout(15000);
 			// create test client
 			const newClientName = `TEST client ${(new Date()).getTime()}`;
+			const testExtID     = `${(new Date()).getTime()}test`;
 			const testClientAttributes = {
-				name : newClientName,
+				name       : newClientName,
+				externalId : testExtID,
 			};
 			// create the test client
 			testClient = await CS.createClient(testClientAttributes);
@@ -682,6 +707,33 @@ describe('clientSuccessClient', function() {
 			expect(upsertedContact.firstName).to.equal(`${upsertedContactTestName}updated`);
 			expect(upsertedContact.lastName).to.equal(`${upsertedContactTestName}updated`);
 			expect(upsertedContact.customFieldValues[1].value).to.equal(`${testExtID}updated`);
+		});
+
+		it('should not create a new contact if it has already been created under this client', async function() {
+			this.timeout(15000);
+			const newContactName  = `TEST user ${(new Date()).getTime()}`;
+			const newContactEmail = `testuser${(new Date()).getTime()}@roadmunk.com`;
+
+			// create a new contact in this test client
+			const testContactAttributes = {
+				firstName : newContactName,
+				lastName  : newContactName,
+				email     : newContactEmail,
+			};
+
+			// create the test contacts
+			const testContact1 = await CS.upsertContact({
+				clientId   : testClient.id,
+				attributes : testContactAttributes,
+			});
+
+			const testContact2 = await CS.upsertContact({
+				clientId   : testClient.id,
+				attributes : testContactAttributes,
+			});
+
+			// we would expect that the query does not create a new user if we are attempting to create a duplciate
+			expect(testContact1.id).to.equal(testContact2.id);
 		});
 	});
 
