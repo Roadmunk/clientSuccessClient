@@ -218,12 +218,22 @@ JS.class(ClientSuccessClient, {
 		 * @param  {String} contactEmail     - Email of the Contact
 		 * @return {Object}                  - Contact Object of the found contact
 		 */
-		getContactByEmail : function(clientExternalId, contactEmail) {
+		getContactByEmail : async function(clientExternalId, contactEmail) {
 			if (!clientExternalId || !contactEmail) {
 				throw new Error('Invalid clientExternalId or contactEmail for getContactByEmail');
 			}
 
-			return this.hitClientSuccessAPI('GET', `contacts?clientExternalId=${clientExternalId}&email=${contactEmail}`);
+			const foundContact = await this.hitClientSuccessAPI(
+				'GET',
+				`contacts?clientExternalId=${clientExternalId}&email=${encodeURIComponent(contactEmail)}`
+			);
+
+			if (!foundContact) {
+				throw new CustomError({ status : 404, message : 'Contact not found' });
+			}
+
+			return foundContact;
+
 		},
 
 		/**
@@ -275,7 +285,17 @@ JS.class(ClientSuccessClient, {
 			this.validateClientSuccessId(clientId);
 
 			if (!contactId) {
-				const contact = await this.createContact(clientId, attributes, customAttributes);
+				let contact;
+				const client = await this.getClient(clientId);
+				try {
+					contact = await this.getContactByEmail(client.externalId, attributes.email);
+					// found existing contact
+				}
+				catch (error) {
+					// contact not found, therefore create it
+					contact = await this.createContact(clientId, attributes, customAttributes);
+				}
+
 				contactId     = contact.id;
 				let updateContactAttributes = Object.assign({}, contact); // clone the client object for comparison purposes
 				if (!_.get(updateContactAttributes, 'customFieldValues[0]')) {
