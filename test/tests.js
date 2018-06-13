@@ -39,8 +39,8 @@ describe('clientSuccessClient', function() {
 	});
 
 	describe('hitClientSuccessAPI', function() {
+		this.timeout(15000);
 		it('should detect a de-authed access token and generate a new token', async function() {
-			this.timeout(15000);
 			CS.authToken = '8b613c39-40a5-4901-8a93-d28f745f29ac'; // set a bad token for testing 401 failure
 
 			const testClient = await CS.getClient(90185858);
