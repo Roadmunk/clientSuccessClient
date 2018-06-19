@@ -57,7 +57,7 @@ JS.class(ClientSuccessClient, {
 		 */
 		hitClientSuccessAPI : async function(method, path, data) {
 			if (!method) {
-				throw new Error('method required');
+				throw new CustomError({ status : 400, message : 'API Method Required' });
 			}
 
 			// Retry for block to re-attempt API call if an expired token is encountered
@@ -91,12 +91,11 @@ JS.class(ClientSuccessClient, {
 					}
 					else {
 						// Package up the resulting API error for the function caller to handle on the other end
-						throw error;
+						throw new CustomError({ status : error.response.status, message : error.response.message });
 					}
 				}
 			}
-
-			throw new CustomError(429, 'Too Many Requests');
+			throw new CustomError({ status : 429, message : 'Too Many Requests' });
 		},
 
 		/**
@@ -138,7 +137,7 @@ JS.class(ClientSuccessClient, {
 				}
 				catch (error) {
 					if (error.status !== 404) {
-						throw error;
+						throw new CustomError({ status : error.status, message : error.message });
 					}
 					// Else, user was not found, therefore continue to creation
 				}
@@ -220,7 +219,7 @@ JS.class(ClientSuccessClient, {
 		 */
 		getContactByEmail : async function(clientExternalId, contactEmail) {
 			if (!clientExternalId || !contactEmail) {
-				throw new Error('Invalid clientExternalId or contactEmail for getContactByEmail');
+				throw new CustomError({ status : 400, message : 'Invalid clientExternalId or contactEmail for getContactByEmail' });
 			}
 
 			const foundContact = await this.hitClientSuccessAPI(
