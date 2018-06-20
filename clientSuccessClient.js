@@ -215,7 +215,7 @@ JS.class(ClientSuccessClient, {
 		 * Preferred to pull by ClientSuccess Client ID, but this method is not supported yet.
 		 * @param  {String} clientExternalId - Client External ID of the Client to be searched
 		 * @param  {String} contactEmail     - Email of the Contact
-		 * @return {Object}                  - Contact Object of the found contact
+		 * @return Promise<Object>           - Contact Object of the found contact
 		 */
 		getContactByEmail : async function(clientExternalId, contactEmail) {
 			if (!clientExternalId || !contactEmail) {
@@ -232,7 +232,6 @@ JS.class(ClientSuccessClient, {
 			}
 
 			return foundContact;
-
 		},
 
 		/**
@@ -275,7 +274,7 @@ JS.class(ClientSuccessClient, {
 		/**
 		 * Creates or updates a Contact based on the attributes provided
 		 * @param  {String} clientId         ClientSuccess ID of the Client that will contain the Contact
-		 * @param  {String} contactId        (Optional) if provided, it will trigger an update, else it will create a new Contact
+		 * @param  {String} [contactId]      If provided, it will trigger an update, else it will create a new Contact
 		 * @param  {Object} attributes       ClientSuccess native Contact attributes to fill
 		 * @param  {Object} customAttributes ClientSuccess Contact custom attributes to fill
 		 * @return {Object}                  Resulting Contact data object
@@ -288,14 +287,13 @@ JS.class(ClientSuccessClient, {
 				const client = await this.getClient(clientId);
 				try {
 					contact = await this.getContactByEmail(client.externalId, attributes.email);
-					// found existing contact
 				}
 				catch (error) {
 					// contact not found, therefore create it
 					contact = await this.createContact(clientId, attributes, customAttributes);
 				}
 
-				contactId     = contact.id;
+				contactId = contact.id;
 				let updateContactAttributes = Object.assign({}, contact); // clone the client object for comparison purposes
 				if (!_.get(updateContactAttributes, 'customFieldValues[0]')) {
 					// The ClientSuccess create contact API does not return back clean custom attributes, only null values
