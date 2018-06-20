@@ -290,7 +290,12 @@ JS.class(ClientSuccessClient, {
 				}
 				catch (error) {
 					// contact not found, therefore create it
-					contact = await this.createContact(clientId, attributes, customAttributes);
+					if (error.status === 404) {
+						contact = await this.createContact(clientId, attributes, customAttributes);
+					}
+					else {
+						throw new CustomError({ status : error.status, message : error.message });
+					}
 				}
 
 				contactId = contact.id;
