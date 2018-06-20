@@ -8,13 +8,6 @@ const config = require('./config');
 
 chai.use(require('chai-as-promised'));
 
-const customTimeout = ms => new Promise(res => setTimeout(res, ms));
-
-// process.on('unhandledRejection', (reason, p) => {
-//	console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
-//	// application specific logging, throwing an error, or other logic here
-// });
-
 describe('clientSuccessClient', function() {
 
 	const runWriteTests = true; // true = run all tests that reach out and write to ClientSuccess
