@@ -39,8 +39,8 @@ describe('clientSuccessClient', function() {
 	});
 
 	describe('hitClientSuccessAPI', function() {
+		this.timeout(15000);
 		it('should detect a de-authed access token and generate a new token', async function() {
-			this.timeout(15000); // We shouldn't have to wait too long for this test, but unfortunatley we do.
 			CS.authToken = '8b613c39-40a5-4901-8a93-d28f745f29ac'; // set a bad token for testing 401 failure
 
 			const testClient = await CS.getClient(90185858);
@@ -105,6 +105,7 @@ describe('clientSuccessClient', function() {
 			}
 		});
 		it('should not create a brand new Client, but should update the existing when creating a Client with matching External ID as an existing Client', async function() {
+			this.timeout(15000);
 			const testUserName1 = `TEST user ${(new Date()).getTime()}`;
 			const testExtID     = `${(new Date()).getTime()}test`;
 
@@ -284,6 +285,7 @@ describe('clientSuccessClient', function() {
 		});
 
 		it('should automatically create a Client if there is a blank clientId present in the function arguments', async function() {
+			this.timeout(15000);
 			const upsertedClientTestName = `TEST user ${(new Date()).getTime()}`;
 			upsertedClient = await CS.upsertClient({
 				clientId   : '',
@@ -693,7 +695,21 @@ describe('clientSuccessClient', function() {
 		});
 
 		it('should throw an error on invalid data', async function() {
-			expect(CS.getClientTypeId()).to.eventually.be.rejectedWith({ status : 400 });
+			try {
+				await CS.getClientTypeId();
+			}
+			catch (error) {
+				expect(error.status).to.equal(400);
+			}
+		});
+
+		it('should throw an error when a provided client type does not exist in ClientSuccess', async function() {
+			try {
+				await CS.getClientTypeId('NonExisting');
+			}
+			catch (error) {
+				expect(error.status).to.equal(404);
+			}
 		});
 	});
 
