@@ -366,7 +366,7 @@ JS.class(ClientSuccessClient, {
 			// send that shit on its way and never look back! BYE FELICIA
 			const response = await axios({
 				method  : 'POST',
-				url     : `https://usage.clientsuccess.com/collector/${clientSuccessEventAPIVersion}/projects/${this.eventsProjectID}/events/${activity}?api_key=${this.eventsAPIKey}`,
+				url     : `https://usage.clientsuccess.com/collector/${clientSuccessEventAPIVersion}/projects/${this.eventsProjectID}/events/${encodeURIComponent(activity)}?api_key=${this.eventsAPIKey}`,
 				headers : { 'Content-Type' : 'application/json' },
 				data    : {
 					identity : {
