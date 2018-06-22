@@ -21,7 +21,7 @@ describe('clientSuccessClient', function() {
 	const createdTestUsers = [];
 
 	// initialize ClientSuccess
-	const CS = new ClientSuccess(config.username, config.password);
+	const CS = new ClientSuccess(config.username, config.password, config.eventsProjectID, config.eventsAPIKey);
 
 	describe('authenticate', function() {
 		it('should be able to authenticate', async function() {
@@ -716,6 +716,50 @@ describe('clientSuccessClient', function() {
 	describe('getClientByExternalId', async function() {
 		it('should error with 404 if the external ID does not exist', async function() {
 			expect(CS.getClientByExternalId('123456')).to.eventually.be.rejectedWith({ status : 404 });
+		});
+	});
+
+	describe('trackActivity', async function() {
+		let testClient;
+		let testContact;
+		let newContactName;
+
+		before(async function() {
+			// create a test client to work with
+			this.timeout(15000);
+			// create test client
+			const newClientName = `TEST client ${(new Date()).getTime()}`;
+			const testClientAttributes = {
+				name : newClientName,
+			};
+			// create the test client
+			testClient = await CS.createClient(testClientAttributes);
+
+			// create a test client
+			newContactName = `TEST user ${(new Date()).getTime()}`;
+
+			// create a new contact in this test client
+			const testContactAttributes = {
+				firstName : newContactName,
+				lastName  : newContactName,
+				email     : `${(new Date()).getTime()}@dev.roadmunk.com`,
+			};
+
+			// create the test client
+			testContact = await CS.createContact(testClient.id, testContactAttributes);
+		});
+
+		after(async function() {
+			// clean the test client
+			CS.closeClient(testClient.id);
+		});
+
+		it('should send activity to ClientSuccess for a Client/Contact', async function() {
+			await CS.trackActivity(testClient.id, testContact.id, 'Login');
+		});
+
+		it('should error when client/user does not exist', async function() {
+			expect(CS.trackActivity(123, 123, 'DNE')).to.eventually.be.rejectedWith({ status : 404 });
 		});
 	});
 
