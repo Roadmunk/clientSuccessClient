@@ -380,7 +380,7 @@ JS.class(ClientSuccessClient, {
 							email : contact.email,
 						},
 					},
-					value : 1,
+					value : 1, // indicating we are only sending one event occurance
 				},
 			});
 		},
