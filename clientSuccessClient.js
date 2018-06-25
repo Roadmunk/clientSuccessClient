@@ -363,7 +363,6 @@ JS.class(ClientSuccessClient, {
 			const client   = await this.getClient(clientID);
 			const contact  = await this.getContact(clientID, contactID);
 
-			// send that shit on its way and never look back! BYE FELICIA
 			const response = await axios({
 				method  : 'POST',
 				url     : `https://usage.clientsuccess.com/collector/${clientSuccessEventAPIVersion}/projects/${this.eventsProjectID}/events/${encodeURIComponent(activity)}?api_key=${this.eventsAPIKey}`,
