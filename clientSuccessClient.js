@@ -329,7 +329,12 @@ JS.class(ClientSuccessClient, {
 			}
 
 			const clientType = _.find(this.clientTypes, { title : clientTypeString });
-			return clientType.id;
+
+			if (clientType) {
+				return clientType.id;
+			}
+
+			throw new CustomError({ status : 404, message : `Requested client type ${clientTypeString} was not found` });
 		},
 
 		/**
