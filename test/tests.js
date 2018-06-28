@@ -43,9 +43,9 @@ describe('clientSuccessClient', function() {
 		it('should detect a de-authed access token and generate a new token', async function() {
 			CS.authToken = '8b613c39-40a5-4901-8a93-d28f745f29ac'; // set a bad token for testing 401 failure
 
-			const testClient = await CS.getClient(90185858);
+			const testClient = await CS.getClient(90267712);
 
-			return expect(testClient.name).to.equal('TEST user 1525729614630');
+			return expect(testClient.name).to.equal('RC Test Client');
 		});
 	});
 
@@ -53,13 +53,13 @@ describe('clientSuccessClient', function() {
 		let testClient;
 
 		it('should return back the object of an existing user', async function() {
-			testClient = await CS.getClient(90185858);
-			return expect(testClient.name).to.equal('TEST user 1525729614630');
+			testClient = await CS.getClient(90267712);
+			return expect(testClient.name).to.equal('RC Test Client');
 		});
 
 		it('should accept string clientIds', async function() {
-			testClient = await CS.getClient('90185858');
-			return expect(testClient.name).to.equal('TEST user 1525729614630');
+			testClient = await CS.getClient('90267712');
+			return expect(testClient.name).to.equal('RC Test Client');
 		});
 
 		it('should return back a 404 error object when the user does not exist', async function() {
@@ -244,6 +244,7 @@ describe('clientSuccessClient', function() {
 	});
 
 	describe('upsertClient', async function() {
+		this.timeout(15000);
 		// we will use a test client
 		let testClient;
 		let upsertedClient;
@@ -264,7 +265,6 @@ describe('clientSuccessClient', function() {
 		});
 
 		after(async function() {
-			this.timeout(15000);
 			// we should clean up the test clients after the tests are run
 			await CS.closeClient(testClient.id);
 			for (let i = 0; i < upsertedClientArray.length; i++) {
@@ -285,7 +285,6 @@ describe('clientSuccessClient', function() {
 		});
 
 		it('should automatically create a Client if there is a blank clientId present in the function arguments', async function() {
-			this.timeout(15000);
 			const upsertedClientTestName = `TEST user ${(new Date()).getTime()}`;
 			upsertedClient = await CS.upsertClient({
 				clientId   : '',
@@ -321,7 +320,6 @@ describe('clientSuccessClient', function() {
 		});
 
 		it('should create a new Client with custom attributes', async function() {
-			this.timeout(15000);
 			// SHOULDDO: define custom fields and order in config.js file, and use this isntead of hard coded values
 			const updatedTestClientName = `${testClient.name} updated`;
 			const upsertClientAttributes = {
@@ -355,6 +353,7 @@ describe('clientSuccessClient', function() {
 	});
 
 	describe('getContact', async function() {
+		this.timeout(15000);
 		it('should return back the object of an existing contact', async function() {
 			if (runWriteTests) {
 				// create test client
@@ -386,9 +385,8 @@ describe('clientSuccessClient', function() {
 		});
 
 		it('should return back a 404 error object when the contact does not exist', async function() {
-			this.timeout(15000);
-			// using Client ID 90185858 that does actually exist, with a 0 contact ID that does not
-			expect(CS.getContact(90185858, 123)).to.eventually.be.rejectedWith({ status : 404 });
+			// using Client ID 90267712 that does actually exist, with a 0 contact ID that does not
+			expect(CS.getContact(90267712, 123)).to.eventually.be.rejectedWith({ status : 404 });
 		});
 
 		it('should throw an error when we pass an invalid data type in');
@@ -691,7 +689,7 @@ describe('clientSuccessClient', function() {
 		it('should return back the appropriate client type ID when a client type label is passed', async function() {
 			this.timeout(15000);
 			const businessClientTypeId = await CS.getClientTypeId('Business');
-			expect(businessClientTypeId).to.equal(3535);
+			expect(businessClientTypeId).to.equal(3600);
 		});
 
 		it('should throw an error on invalid data', async function() {
