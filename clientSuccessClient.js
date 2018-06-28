@@ -4,7 +4,6 @@ const _     = require('lodash');
 
 const RETRY_LIMIT                  = 10;	// number of retry attempts for any given API call
 const URL                          = 'https://api.clientsuccess.com/v1/';
-const clientSuccessEventAPIVersion = '1.0.0';
 
 const ClientSuccessClient = module.exports                  = JS.class('ClientSuccessClient');
 const CustomError         = ClientSuccessClient.CustomError = JS.class('CustomError');
@@ -352,20 +351,21 @@ JS.class(ClientSuccessClient, {
 
 		/**
 		 * Track user activity into the ClientSuccess usage module
-		 * @param  {String} clientID  ID of the ClientSuccess client that the usage will be logged under
-		 * @param  {String} contactID ID of the contact that the activity originated from
-		 * @param  {String} activity  Activity name that occurred
+		 * @param  {String}  clientID        - ID of the ClientSuccess client that the usage will be logged under
+		 * @param  {String}  contactID       - ID of the contact that the activity originated from
+		 * @param  {String}  activity        - Activity name that occurred
+		 * @param  {Integer} [occurrences=1] - Number of times that the user completed this action
 		 */
-		trackActivity : async function(clientID, contactID, activity) {
+		trackActivity : async function(clientID, contactID, activity, occurrences = 1) {
 			this.validateClientSuccessId(clientID);
 			this.validateClientSuccessId(contactID);
 
 			const client   = await this.getClient(clientID);
 			const contact  = await this.getContact(clientID, contactID);
 
-			const response = await axios({
+			axios({
 				method  : 'POST',
-				url     : `https://usage.clientsuccess.com/collector/${clientSuccessEventAPIVersion}/projects/${this.eventsProjectID}/events/${encodeURIComponent(activity)}?api_key=${this.eventsAPIKey}`,
+				url     : `https://usage.clientsuccess.com/collector/1.0.0/projects/${this.eventsProjectID}/events/${encodeURIComponent(activity)}?api_key=${this.eventsAPIKey}`,
 				headers : { 'Content-Type' : 'application/json' },
 				data    : {
 					identity : {
@@ -379,7 +379,7 @@ JS.class(ClientSuccessClient, {
 							email : contact.email,
 						},
 					},
-					value : 1, // indicating we are only sending one event occurance
+					value : occurrences,
 				},
 			});
 		},
