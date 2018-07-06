@@ -86,7 +86,6 @@ describe('clientSuccessClient', function() {
 				name : newUserName,
 			};
 
-			// create the test client
 			testClient = await CS.createClient(testClientAttributes);
 
 			expect(testClient.id).to.be.a('number');
@@ -142,7 +141,6 @@ describe('clientSuccessClient', function() {
 				'Account Notes' : `${newUserName} note`,
 			};
 
-			// create the test client
 			testClient = await CS.createClient(testClientAttributes, testClientCustomAttributes);
 
 			const createdCustomUser = await CS.getClient(testClient.id);
@@ -361,7 +359,6 @@ describe('clientSuccessClient', function() {
 				const testClientAttributes = {
 					name : newClientName,
 				};
-				// create the test client
 				const testClient = await CS.createClient(testClientAttributes);
 				// add the clientIc to be cleaned up later
 				createdTestUsers.push(testClient.id);
@@ -369,13 +366,11 @@ describe('clientSuccessClient', function() {
 				// create a test client
 				const newContactName = `TEST user ${(new Date()).getTime()}`;
 
-				// create a new contact in this test client
 				const testContactAttributes = {
 					firstName : newContactName,
 					lastName  : newContactName,
 				};
 
-				// create the test client
 				const testContact = await CS.createContact(testClient.id, testContactAttributes);
 
 				const foundContact = await CS.getContact(testContact.clientId, testContact.id);
@@ -393,16 +388,15 @@ describe('clientSuccessClient', function() {
 	});
 
 	describe('createContact', async function() {
+		this.timeout(15000);
 		let testClient;
 
 		before(async function() {
-			this.timeout(15000);
 			// create test client
 			const newClientName = `TEST client ${(new Date()).getTime()}`;
 			const testClientAttributes = {
 				name : newClientName,
 			};
-				// create the test client
 			testClient = await CS.createClient(testClientAttributes);
 		});
 
@@ -415,13 +409,11 @@ describe('clientSuccessClient', function() {
 			// create a test client
 			const newContactName = `TEST user ${(new Date()).getTime()}`;
 
-			// create a new contact in this test client
 			const testContactAttributes = {
 				firstName : newContactName,
 				lastName  : newContactName,
 			};
 
-			// create the test client
 			const testContact = await CS.createContact(testClient.id, testContactAttributes);
 
 			expect(testContact.id).to.be.a('number');
@@ -435,7 +427,6 @@ describe('clientSuccessClient', function() {
 			const newContactName  = `TEST user ${(new Date()).getTime()}`;
 			const newContactEmail = `testuser${(new Date()).getTime()}@roadmunk.com`;
 
-			// create a new contact in this test client
 			const testContactAttributes = {
 				firstName : newContactName,
 				lastName  : newContactName,
@@ -478,36 +469,31 @@ describe('clientSuccessClient', function() {
 	});
 
 	describe('updateContact', function() {
+		this.timeout(15000);
 		let testClient;
 		let testContact;
 		let newContactName;
 
 		before(async function() {
-			// create a test client to work with
-			this.timeout(15000);
 			// create test client
 			const newClientName = `TEST client ${(new Date()).getTime()}`;
 			const testClientAttributes = {
 				name : newClientName,
 			};
-			// create the test client
 			testClient = await CS.createClient(testClientAttributes);
 
 			// create a test client
 			newContactName = `TEST user ${(new Date()).getTime()}`;
 
-			// create a new contact in this test client
 			const testContactAttributes = {
 				firstName : newContactName,
 				lastName  : newContactName,
 			};
 
-			// create the test client
 			testContact = await CS.createContact(testClient.id, testContactAttributes);
 		});
 
 		after(async function() {
-			// clean the test client
 			CS.closeClient(testClient.id);
 		});
 
@@ -548,36 +534,31 @@ describe('clientSuccessClient', function() {
 	});
 
 	describe('upsertContact', async function() {
+		this.timeout(15000);
 		let testClient;
 		let testContact;
 		let newContactName;
 
 		before(async function() {
-			// create a test client to work with
-			this.timeout(15000);
 			// create test client
 			const newClientName = `TEST client ${(new Date()).getTime()}`;
 			const testClientAttributes = {
 				name : newClientName,
 			};
-			// create the test client
 			testClient = await CS.createClient(testClientAttributes);
 
 			// create a test client
 			newContactName = `TEST user ${(new Date()).getTime()}`;
 
-			// create a new contact in this test client
 			const testContactAttributes = {
 				firstName : newContactName,
 				lastName  : newContactName,
 			};
 
-			// create the test client
 			testContact = await CS.createContact(testClient.id, testContactAttributes);
 		});
 
 		after(async function() {
-			// clean the test client
 			CS.closeClient(testClient.id);
 		});
 
@@ -718,45 +699,41 @@ describe('clientSuccessClient', function() {
 	});
 
 	describe('trackActivity', async function() {
+		this.timeout(15000);
 		let testClient;
 		let testContact;
 		let newContactName;
 
 		before(async function() {
-			// create a test client to work with
-			this.timeout(15000);
 			// create test client
 			const newClientName = `TEST client ${(new Date()).getTime()}`;
 			const testClientAttributes = {
 				name : newClientName,
 			};
-			// create the test client
 			testClient = await CS.createClient(testClientAttributes);
 
 			// create a test client
 			newContactName = `TEST user ${(new Date()).getTime()}`;
 
-			// create a new contact in this test client
 			const testContactAttributes = {
 				firstName : newContactName,
 				lastName  : newContactName,
 				email     : `${(new Date()).getTime()}@dev.roadmunk.com`,
 			};
 
-			// create the test client
 			testContact = await CS.createContact(testClient.id, testContactAttributes);
 		});
 
 		after(async function() {
-			// clean the test client
 			CS.closeClient(testClient.id);
 		});
 
-		it('should send activity to ClientSuccess for a Client/Contact', async function() {
-			await CS.trackActivity(testClient.id, testContact.id, 'Login');
+		it.only('should send activity to ClientSuccess for a Client/Contact', async function() {
+			const trackActivity = await CS.trackActivity(testClient.id, testContact.id, 'Login');
+			expect(trackActivity.status).to.equal(201);
 		});
 
-		it('should error when client/user does not exist', async function() {
+		it('should error when client does not exist', async function() {
 			expect(CS.trackActivity(123, 123, 'DNE')).to.eventually.be.rejectedWith({ status : 404 });
 		});
 	});

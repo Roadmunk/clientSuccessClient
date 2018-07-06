@@ -363,7 +363,7 @@ JS.class(ClientSuccessClient, {
 			const client   = await this.getClient(clientID);
 			const contact  = await this.getContact(clientID, contactID);
 
-			axios({
+			const response = await axios({
 				method  : 'POST',
 				url     : `https://usage.clientsuccess.com/collector/1.0.0/projects/${this.eventsProjectID}/events/${encodeURIComponent(activity)}?api_key=${this.eventsAPIKey}`,
 				headers : { 'Content-Type' : 'application/json' },
@@ -382,6 +382,8 @@ JS.class(ClientSuccessClient, {
 					value : occurrences,
 				},
 			});
+
+			return response;
 		},
 	},
 });
