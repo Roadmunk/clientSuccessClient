@@ -61,7 +61,7 @@ JS.class(ClientSuccessClient, {
 		 */
 		hitClientSuccessAPI : async function(method, path, data) {
 			if (!method) {
-				throw new Error('method required');
+				throw new CustomError({ status : 400, message : 'API Method Required' });
 			}
 
 			// Retry for block to re-attempt API call if an expired token is encountered
@@ -95,12 +95,11 @@ JS.class(ClientSuccessClient, {
 					}
 					else {
 						// Package up the resulting API error for the function caller to handle on the other end
-						throw error;
+						throw new CustomError({ status : error.response.status, message : error.response.message });
 					}
 				}
 			}
-
-			throw new CustomError(429, 'Too Many Requests');
+			throw new CustomError({ status : 429, message : 'Too Many Requests' });
 		},
 
 		/**
@@ -142,7 +141,7 @@ JS.class(ClientSuccessClient, {
 				}
 				catch (error) {
 					if (error.status !== 404) {
-						throw error;
+						throw new CustomError({ status : error.status, message : error.message });
 					}
 					// Else, user was not found, therefore continue to creation
 				}
@@ -220,14 +219,23 @@ JS.class(ClientSuccessClient, {
 		 * Preferred to pull by ClientSuccess Client ID, but this method is not supported yet.
 		 * @param  {String} clientExternalId - Client External ID of the Client to be searched
 		 * @param  {String} contactEmail     - Email of the Contact
-		 * @return {Object}                  - Contact Object of the found contact
+		 * @return Promise<Object>           - Contact Object of the found contact
 		 */
-		getContactByEmail : function(clientExternalId, contactEmail) {
+		getContactByEmail : async function(clientExternalId, contactEmail) {
 			if (!clientExternalId || !contactEmail) {
-				throw new Error('Invalid clientExternalId or contactEmail for getContactByEmail');
+				throw new CustomError({ status : 400, message : 'Invalid clientExternalId or contactEmail for getContactByEmail' });
 			}
 
-			return this.hitClientSuccessAPI('GET', `contacts?clientExternalId=${clientExternalId}&email=${contactEmail}`);
+			const foundContact = await this.hitClientSuccessAPI(
+				'GET',
+				`contacts?clientExternalId=${clientExternalId}&email=${encodeURIComponent(contactEmail)}`
+			);
+
+			if (!foundContact) {
+				throw new CustomError({ status : 404, message : 'Contact not found' });
+			}
+
+			return foundContact;
 		},
 
 		/**
@@ -270,7 +278,7 @@ JS.class(ClientSuccessClient, {
 		/**
 		 * Creates or updates a Contact based on the attributes provided
 		 * @param  {String} clientId         ClientSuccess ID of the Client that will contain the Contact
-		 * @param  {String} contactId        (Optional) if provided, it will trigger an update, else it will create a new Contact
+		 * @param  {String} [contactId]      If provided, it will trigger an update, else it will create a new Contact
 		 * @param  {Object} attributes       ClientSuccess native Contact attributes to fill
 		 * @param  {Object} customAttributes ClientSuccess Contact custom attributes to fill
 		 * @return {Object}                  Resulting Contact data object
@@ -279,8 +287,22 @@ JS.class(ClientSuccessClient, {
 			this.validateClientSuccessId(clientId);
 
 			if (!contactId) {
-				const contact = await this.createContact(clientId, attributes, customAttributes);
-				contactId     = contact.id;
+				let contact;
+				const client = await this.getClient(clientId);
+				try {
+					contact = await this.getContactByEmail(client.externalId, attributes.email);
+				}
+				catch (error) {
+					// contact not found, therefore create it
+					if (error.status === 404) {
+						contact = await this.createContact(clientId, attributes, customAttributes);
+					}
+					else {
+						throw new CustomError({ status : error.status, message : error.message });
+					}
+				}
+
+				contactId = contact.id;
 				let updateContactAttributes = Object.assign({}, contact); // clone the client object for comparison purposes
 				if (!_.get(updateContactAttributes, 'customFieldValues[0]')) {
 					// The ClientSuccess create contact API does not return back clean custom attributes, only null values
