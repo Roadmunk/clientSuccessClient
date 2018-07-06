@@ -728,7 +728,7 @@ describe('clientSuccessClient', function() {
 			CS.closeClient(testClient.id);
 		});
 
-		it.only('should send activity to ClientSuccess for a Client/Contact', async function() {
+		it('should send activity to ClientSuccess for a Client/Contact', async function() {
 			const trackActivity = await CS.trackActivity(testClient.id, testContact.id, 'Login');
 			expect(trackActivity.status).to.equal(201);
 		});
