@@ -407,6 +407,55 @@ JS.class(ClientSuccessClient, {
 
 			return response;
 		},
+
+		/**
+		 * Get ClientSuccess product ID based on product name
+		 * @param  {String} productName - Name of the Product
+		 * @return {Integer}            - ID of the Product
+		 */
+		getProductID : async function(productName) {
+			const clientSuccessProducts = await this.hitClientSuccessAPI('GET', 'products');
+			for (let x = 0; x < clientSuccessProducts.length; x++) {
+				console.log(clientSuccessProducts[x].name);
+				if (clientSuccessProducts[x].active === true && clientSuccessProducts[x].name == productName) {
+					console.log(clientSuccessProducts[x].id);
+					return clientSuccessProducts[x].id;
+				}
+			}
+			throw new CustomError({ status : 404, message : 'Product not found' });
+		},
+
+		/**
+		 * Get all subscription items for a client
+		 * @param  {String} clientID - ClientSuccess Client ID
+		 * @return {Object}          - Subscriptions list for the provided Client ID
+		 */
+		getClientSubscriptions : async function(clientID) {
+			this.validateClientSuccessId(clientID);
+
+			const clientSubscriptions = await this.hitClientSuccessAPI('GET', `subscriptions?clientId=${clientID}`);
+			if (clientSubscriptions.length > 0) {
+				return clientSubscriptions;
+			}
+			throw new CustomError({ status : 404, message : 'No subscriptions found for client' });
+		},
+
+		// isPotential needs to be === false for the line item to show up in ClientSuccess...?
+
+		createClientSubscription : async function(clientID, attributes) {
+			this.validateClientSuccessId(clientID);
+
+			// add clientID to the attributes array
+			const finalAttributes = Object.assign(attributes, { clientId : clientID });
+			console.log('Finalized attributes array:');
+			console.log(finalAttributes);
+
+			const clientSubscriptions = await this.hitClientSuccessAPI('POST', 'subscriptions', finalAttributes);
+
+			return clientSubscriptions;
+		},
+
+
 	},
 });
 

@@ -738,6 +738,58 @@ describe('clientSuccessClient', function() {
 		});
 	});
 
+	describe('getClientSubscriptions', async function() {
+		it('should return subscription items for a client', async function() {
+			const clientSubscriptions = await CS.getClientSubscriptions(90269239);
+			console.log(clientSubscriptions);
+			expect(clientSubscriptions.length).to.be.above(1);
+		});
+
+		it('should return a 404 if there are no subscriptions found for the client', async function() {
+			expect(CS.getClientSubscriptions(123)).to.eventually.be.rejectedWith({ status : 404 });
+		});
+	});
+
+	describe('createClientSubscription', async function() {
+		this.timeout(15000);
+		let testClient;
+
+		before(async function() {
+			// create a test client with initial attributes to use in updateClient tests
+			const testClientName = `TEST user ${(new Date()).getTime()}`;
+
+			const testClientAttributesInitial = {
+				name : testClientName,
+			};
+
+			testClient = await CS.createClient(testClientAttributesInitial);
+		});
+
+		after(async function() {
+			CS.closeClient(testClient.id);
+		});
+
+		it('should successfully create a ClientSuccess subscription', async function() {
+			const testProductID = await CS.getProductID('Collaborators');
+			console.log(`Creating subscription under product ID: ${testProductID} with client ID: ${testClient.id}`);
+			const createSubscription = await CS.createClientSubscription(testClient.id, {
+				productId   : testProductID,
+				isRecurring : true,
+				amount      : 10000,
+				quantity    : 1,
+				startDate   : '2018-05-25',
+				endDate     : '2019-05-24',
+				isPotential : false,
+				autoRenew   : false,
+				note        : {
+					note : 'test note',
+				},
+			});
+			console.log(createSubscription);
+			// expect(createSubscription.status).to.equal(201);
+		});
+	});
+
 	describe('cleanup', async function() {
 		if (runWriteTests) {
 			// set a longer timeout for this function as it will surely take longer than 2 seconds to clean everything
