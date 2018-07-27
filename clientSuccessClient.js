@@ -425,6 +425,12 @@ JS.class(ClientSuccessClient, {
 			throw new CustomError({ status : 404, message : 'Product not found' });
 		},
 
+		/**
+		 * Create a new ClientSuccess Product Type
+		 * @param  {String}  name               - Name of the new Product Type
+		 * @param  {Boolean} [recurring = true] - Denotes if Subscription is recurring or not
+		 * @return Promise<Object>              - Resulting ClientSuccess Subscription object
+		 */
 		createProductType : async function({ name = undefined, recurring = true } = {}) {
 			if (!name) {
 				throw new CustomError({ status : 400, message : 'Product Name Required' });
@@ -450,7 +456,7 @@ JS.class(ClientSuccessClient, {
 		/**
 		 * Get all subscription items for a client
 		 * @param  {String} clientID - ClientSuccess Client ID
-		 * @return {Object}          - Subscriptions list for the provided Client ID
+		 * @return Promise<Object>   - Subscriptions list for the provided Client ID
 		 */
 		getClientActiveSubscriptions : async function(clientID) {
 			this.validateClientSuccessId(clientID);
@@ -479,7 +485,7 @@ JS.class(ClientSuccessClient, {
 		 * Create a ClientSuccess Subscription line item under the passed Client
 		 * @param  {String} clientID   - ClientSuccess Client
 		 * @param  {Object} attributes - List of Subscription attributes
-		 * @return {[type]}            [description]
+		 * @return Promise<Object>     - Resulting ClientSuccess Subscription created
 		 */
 		createClientSubscription : async function(clientID, attributes) {
 			this.validateClientSuccessId(clientID);
