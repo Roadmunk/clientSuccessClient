@@ -418,9 +418,7 @@ JS.class(ClientSuccessClient, {
 		getProductID : async function(productName) {
 			const clientSuccessProducts = await this.hitClientSuccessAPI('GET', 'products');
 			for (let x = 0; x < clientSuccessProducts.length; x++) {
-				console.log(clientSuccessProducts[x].name);
 				if (clientSuccessProducts[x].active === true && clientSuccessProducts[x].name == productName) {
-					console.log(clientSuccessProducts[x].id);
 					return clientSuccessProducts[x].id;
 				}
 			}
@@ -477,31 +475,28 @@ JS.class(ClientSuccessClient, {
 			throw new CustomError({ status : 404, message : 'No subscriptions found for client' });
 		},
 
-		// isPotential needs to be === false for the line item to show up in ClientSuccess...?
-
+		/**
+		 * Create a ClientSuccess Subscription line item under the passed Client
+		 * @param  {String} clientID   - ClientSuccess Client
+		 * @param  {Object} attributes - List of Subscription attributes
+		 * @return {[type]}            [description]
+		 */
 		createClientSubscription : async function(clientID, attributes) {
 			this.validateClientSuccessId(clientID);
 
 			// add clientID to the attributes array
 			const finalAttributes = Object.assign(attributes, { clientId : clientID });
-			console.log('Finalized attributes array:');
-			console.log(finalAttributes);
 
-			const clientSubscriptions = await this.hitClientSuccessAPI('POST', 'subscriptions', finalAttributes);
+			const clientSubscription = await this.hitClientSuccessAPI('POST', 'subscriptions', finalAttributes);
 
-			return clientSubscriptions;
+			return clientSubscription;
 		},
-
-
 	},
 });
 
 JS.class(CustomError, {
 	inherits : Error,
 
-	constructor : function({ status, message }) {
-		this.status  = status;
-		this.message = message;
 	constructor : function({ status, message, userMessage }) {
 		this.status      = status;
 		this.message     = message;
