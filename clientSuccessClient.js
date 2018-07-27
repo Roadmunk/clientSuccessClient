@@ -85,16 +85,18 @@ JS.class(ClientSuccessClient, {
 						this.authToken = null;
 					}
 					else if (error.response.status === 503) {
-						throw new CustomError({ status : 503, message : 'Service Temporarily Unavailable' });
+						throw new CustomError({ status : 503, message : 'Service Temporarily Unavailable', userMessage : error.response.data.userMessage });
 					}
 					else if (error.response.status === 417) {
-						throw new CustomError({ status : 417, message : 'Expectation Failed' });
+						throw new CustomError({ status : 417, message : 'Expectation Failed', userMessage : error.response.data.userMessage });
 					}
 					else if (error.response.status === 404) {
-						throw new CustomError({ status : 404, message : 'Not Found' });
+						throw new CustomError({ status : 404, message : 'Not Found', userMessage : error.response.data.userMessage });
+					}
+					else if (error.response.status === 400) {
+						throw new CustomError({ status : 400, message : 'Bad Request', userMessage : error.response.data.userMessage });
 					}
 					else {
-						// Package up the resulting API error for the function caller to handle on the other end
 						throw new CustomError({ status : error.response.status, message : error.response.message });
 					}
 				}
