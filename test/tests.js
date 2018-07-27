@@ -738,15 +738,15 @@ describe('clientSuccessClient', function() {
 		});
 	});
 
-	describe('getProductID', async function() {
+	describe('getProductId', async function() {
 		it('should return back a product ID', async function() {
-			const testProductID = await CS.getProductID('DNE');
+			const testProductID = await CS.getProductId('DNE');
 			expect(testProductID).to.equal(7746);
 		});
 
 		it('should return back a 404 if the product does not exist', async function() {
 			try {
-				await CS.getProductID('May the force be with you');
+				await CS.getProductId('May the force be with you');
 			}
 			catch (error) {
 				expect(error.status).to.equal(404);
@@ -768,7 +768,7 @@ describe('clientSuccessClient', function() {
 		it.skip('should delete a product', async function() {
 			// Set to skip because you can't fully delete a ClientSuccess product, and we don't want to
 			// dirty an instance with a bunch of duplicate products
-			const testProductID = await CS.getProductID('Test Suite Product');
+			const testProductID = await CS.getProductId('Test Suite Product');
 			await CS.deleteProduct(testProductID);
 		});
 
@@ -808,10 +808,10 @@ describe('clientSuccessClient', function() {
 		});
 
 		it('should successfully create a ClientSuccess subscription', async function() {
-			const testProductID = await CS.getProductID('Collaborators');
-			// console.log(`Creating subscription under product ID: ${testProductID} with client ID: ${testClient.id}`);
+			const testProductId = await CS.getProductId('Collaborators');
+			// console.log(`Creating subscription under product ID: ${testProductId} with client ID: ${testClient.id}`);
 			const clientSubscription = await CS.createClientSubscription(testClient.id, {
-				productId   : testProductID,
+				productId   : testProductId,
 				isRecurring : true,
 				amount      : 10000,
 				quantity    : 1,
@@ -828,10 +828,10 @@ describe('clientSuccessClient', function() {
 		});
 
 		it('should error with 404 if ClientSuccess Client ID does not exist', async function() {
-			const testProductID = await CS.getProductID('Collaborators');
+			const testProductId = await CS.getProductId('Collaborators');
 
 			const testSubscriptionAttributes = {
-				productId   : testProductID,
+				productId   : testProductId,
 				isRecurring : true,
 				amount      : 10000,
 				quantity    : 1,

@@ -415,7 +415,7 @@ JS.class(ClientSuccessClient, {
 		 * @param  {String} productName - Name of the Product
 		 * @return {Integer}            - ID of the Product
 		 */
-		getProductID : async function(productName) {
+		getProductId : async function(productName) {
 			const clientSuccessProducts = await this.hitClientSuccessAPI('GET', 'products');
 
 			const foundProduct = _.find(clientSuccessProducts, { active : true, name : productName });
