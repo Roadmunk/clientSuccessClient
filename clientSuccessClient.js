@@ -417,11 +417,13 @@ JS.class(ClientSuccessClient, {
 		 */
 		getProductID : async function(productName) {
 			const clientSuccessProducts = await this.hitClientSuccessAPI('GET', 'products');
-			for (let x = 0; x < clientSuccessProducts.length; x++) {
-				if (clientSuccessProducts[x].active === true && clientSuccessProducts[x].name == productName) {
-					return clientSuccessProducts[x].id;
-				}
+
+			const foundProduct = _.find(clientSuccessProducts, { active : true, name : productName });
+
+			if (foundProduct) {
+				return foundProduct.id;
 			}
+
 			throw new CustomError({ status : 404, message : 'Product not found' });
 		},
 

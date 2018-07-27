@@ -738,6 +738,22 @@ describe('clientSuccessClient', function() {
 		});
 	});
 
+	describe('getProductID', async function() {
+		it('should return back a product ID', async function() {
+			const testProductID = await CS.getProductID('DNE');
+			expect(testProductID).to.equal(7746);
+		});
+
+		it('should return back a 404 if the product does not exist', async function() {
+			try {
+				await CS.getProductID('May the force be with you');
+			}
+			catch (error) {
+				expect(error.status).to.equal(404);
+			}
+		});
+	});
+
 	describe('createProductType', async function() {
 		it('should create a new product type', async function() {
 			const createdProduct = await CS.createProductType({
