@@ -448,17 +448,31 @@ JS.class(ClientSuccessClient, {
 
 			return this.hitClientSuccessAPI('DELETE', `products/${productId}`);
 		},
+
 		/**
 		 * Get all subscription items for a client
 		 * @param  {String} clientID - ClientSuccess Client ID
 		 * @return {Object}          - Subscriptions list for the provided Client ID
 		 */
-		getClientSubscriptions : async function(clientID) {
+		getClientActiveSubscriptions : async function(clientID) {
 			this.validateClientSuccessId(clientID);
 
 			const clientSubscriptions = await this.hitClientSuccessAPI('GET', `subscriptions?clientId=${clientID}`);
 			if (clientSubscriptions.length > 0) {
-				return clientSubscriptions;
+				// ClientSuccess has outlined that Subscriptions that are considered 'Active' have attribute isPotential = false
+				// Loop through the returned array and pull out the 'Active' subscriptions
+				const activeSubscriptions = [];
+				for (let i = 0; i < clientSubscriptions.length; i++) {
+					if (clientSubscriptions[i].isPotential === undefined) {
+						throw new CustomError({ status : 404, message : 'Subscription isPotential attribute does not exist.' });
+					}
+
+					if (clientSubscriptions[i].isPotential === false) {
+						activeSubscriptions.push(clientSubscriptions[i]);
+					}
+				}
+
+				return activeSubscriptions;
 			}
 			throw new CustomError({ status : 404, message : 'No subscriptions found for client' });
 		},
