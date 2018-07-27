@@ -2,23 +2,27 @@ const JS    = require('@roadmunk/jsclass/JS');
 const axios = require('axios');
 const _     = require('lodash');
 
-const RETRY_LIMIT = 10;	// number of retry attempts for any given API call
-const URL         = 'https://api.clientsuccess.com/v1/';
+const RETRY_LIMIT                  = 10;	// number of retry attempts for any given API call
+const URL                          = 'https://api.clientsuccess.com/v1/';
 
 const ClientSuccessClient = module.exports                  = JS.class('ClientSuccessClient');
 const CustomError         = ClientSuccessClient.CustomError = JS.class('CustomError');
 
 JS.class(ClientSuccessClient, {
 	fields : {
-		username    : null,
-		password    : null,
-		authToken   : null,
-		clientTypes : null,
+		username        : null,
+		password        : null,
+		authToken       : null,
+		clientTypes     : null,
+		eventsProjectID : null,
+		eventsAPIKey    : null,
 	},
 
-	constructor : function(username, password) {
-		this.username = username;
-		this.password = password;
+	constructor : function(username, password, eventsProjectID, eventsAPIKey) {
+		this.username        = username;
+		this.password        = password;
+		this.eventsProjectID = eventsProjectID;
+		this.eventsAPIKey    = eventsAPIKey;
 	},
 
 	methods : {
@@ -362,9 +366,46 @@ JS.class(ClientSuccessClient, {
 		 * @param  {String} clientSuccessId ClientSuccess ID that is to be validated
 		 */
 		validateClientSuccessId : function(clientSuccessId) {
-			if (!clientSuccessId || isNaN(parseInt(clientSuccessId)) || !isFinite(clientSuccessId) || clientSuccessId % 1 !== 0) {
+			if (!clientSuccessId || isNaN(parseInt(clientSuccessId))) {
 				throw new CustomError({ status : 400, message : 'Invalid ClientSuccess ID' });
 			}
+		},
+
+		/**
+		 * Track user activity into the ClientSuccess usage module
+		 * @param  {String}  clientID        - ID of the ClientSuccess client that the usage will be logged under
+		 * @param  {String}  contactID       - ID of the contact that the activity originated from
+		 * @param  {String}  activity        - Activity name that occurred
+		 * @param  {Integer} [occurrences=1] - Number of times that the user completed this action
+		 */
+		trackActivity : async function({ clientID = undefined, contactID = undefined, activity = undefined, occurrences = 1 }) {
+			this.validateClientSuccessId(clientID);
+			const client   = await this.getClient(clientID);
+
+			const activityIdentity = {
+				identity : {
+					organization : {
+						id   : client.id,
+						name : client.name,
+					},
+				},
+				value : occurrences,
+			};
+
+			if (contactID) {
+				activityIdentity.identity.user = {
+					id : contactID,
+				};
+			}
+
+			const response = await axios({
+				method  : 'POST',
+				url     : `https://usage.clientsuccess.com/collector/1.0.0/projects/${this.eventsProjectID}/events/${encodeURIComponent(activity)}?api_key=${this.eventsAPIKey}`,
+				headers : { 'Content-Type' : 'application/json' },
+				data    : activityIdentity,
+			});
+
+			return response;
 		},
 	},
 });
