@@ -738,15 +738,37 @@ describe('clientSuccessClient', function() {
 		});
 	});
 
-	describe('getClientSubscriptions', async function() {
+	describe('createProductType', async function() {
+		it('should create a new product type', async function() {
+			const createdProduct = await CS.createProductType({
+				name : 'Test Suite Product',
+			});
+			expect(createdProduct.id).is.not.null;
+			expect(createdProduct.name).to.equal('Test Suite Product');
+		});
+	});
+
+	describe('deleteProduct', async function() {
+		it.skip('should delete a product', async function() {
+			// Set to skip because you can't fully delete a ClientSuccess product, and we don't want to
+			// dirty an instance with a bunch of duplicate products
+			const testProductID = await CS.getProductID('Test Suite Product');
+			await CS.deleteProduct(testProductID);
+		});
+
+		it('should return 404 if the product does not exist', async function() {
+			expect(CS.deleteProduct('No one would name their product this')).to.eventually.be.rejectedWith({ status : 404 });
+		});
+	});
+
+	describe('getClientActiveSubscriptions', async function() {
 		it('should return subscription items for a client', async function() {
-			const clientSubscriptions = await CS.getClientSubscriptions(90269239);
-			console.log(clientSubscriptions);
-			expect(clientSubscriptions.length).to.be.above(1);
+			const clientSubscriptions = await CS.getClientActiveSubscriptions(90280083);
+			expect(clientSubscriptions.length).to.equal(1);
 		});
 
 		it('should return a 404 if there are no subscriptions found for the client', async function() {
-			expect(CS.getClientSubscriptions(123)).to.eventually.be.rejectedWith({ status : 404 });
+			expect(CS.getClientActiveSubscriptions(123)).to.eventually.be.rejectedWith({ status : 404 });
 		});
 	});
 
@@ -756,7 +778,7 @@ describe('clientSuccessClient', function() {
 
 		before(async function() {
 			// create a test client with initial attributes to use in updateClient tests
-			const testClientName = `TEST user ${(new Date()).getTime()}`;
+			const testClientName = `${(new Date()).getTime()}`;
 
 			const testClientAttributesInitial = {
 				name : testClientName,
@@ -771,8 +793,8 @@ describe('clientSuccessClient', function() {
 
 		it('should successfully create a ClientSuccess subscription', async function() {
 			const testProductID = await CS.getProductID('Collaborators');
-			console.log(`Creating subscription under product ID: ${testProductID} with client ID: ${testClient.id}`);
-			const createSubscription = await CS.createClientSubscription(testClient.id, {
+			// console.log(`Creating subscription under product ID: ${testProductID} with client ID: ${testClient.id}`);
+			const clientSubscription = await CS.createClientSubscription(testClient.id, {
 				productId   : testProductID,
 				isRecurring : true,
 				amount      : 10000,
@@ -785,8 +807,27 @@ describe('clientSuccessClient', function() {
 					note : 'test note',
 				},
 			});
-			console.log(createSubscription);
-			// expect(createSubscription.status).to.equal(201);
+
+			expect(clientSubscription.id).is.not.null;
+		});
+
+		it('should error with 404 if ClientSuccess Client ID does not exist', async function() {
+			const testProductID = await CS.getProductID('Collaborators');
+
+			const testSubscriptionAttributes = {
+				productId   : testProductID,
+				isRecurring : true,
+				amount      : 10000,
+				quantity    : 1,
+				startDate   : '2018-05-25',
+				endDate     : '2019-05-24',
+				autoRenew   : false,
+				note        : {
+					note : 'test note',
+				},
+			};
+
+			expect(CS.createClientSubscription('123', testSubscriptionAttributes)).to.eventually.be.rejectedWith({ status : 404 });
 		});
 	});
 
