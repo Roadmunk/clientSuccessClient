@@ -427,6 +427,27 @@ JS.class(ClientSuccessClient, {
 			throw new CustomError({ status : 404, message : 'Product not found' });
 		},
 
+		createProductType : async function({ name = undefined, recurring = true } = {}) {
+			if (!name) {
+				throw new CustomError({ status : 400, message : 'Product Name Required' });
+			}
+
+			const productAttributes = {
+				name,
+				recurring,
+				active : true,
+			};
+
+			return this.hitClientSuccessAPI('POST', 'products', productAttributes);
+		},
+
+		deleteProduct : async function(productId) {
+			if (!productId) {
+				throw new CustomError({ status : 400, message : 'Product ID Required for Deletion' });
+			}
+
+			return this.hitClientSuccessAPI('DELETE', `products/${productId}`);
+		},
 		/**
 		 * Get all subscription items for a client
 		 * @param  {String} clientID - ClientSuccess Client ID
