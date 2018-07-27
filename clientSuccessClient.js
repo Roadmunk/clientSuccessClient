@@ -378,31 +378,31 @@ JS.class(ClientSuccessClient, {
 		 * @param  {String}  activity        - Activity name that occurred
 		 * @param  {Integer} [occurrences=1] - Number of times that the user completed this action
 		 */
-		trackActivity : async function(clientID, contactID, activity, occurrences = 1) {
+		trackActivity : async function({ clientID = undefined, contactID = undefined, activity = undefined, occurrences = 1 }) {
 			this.validateClientSuccessId(clientID);
-			this.validateClientSuccessId(contactID);
-
 			const client   = await this.getClient(clientID);
-			const contact  = await this.getContact(clientID, contactID);
+
+			const activityIdentity = {
+				identity : {
+					organization : {
+						id   : client.id,
+						name : client.name,
+					},
+				},
+				value : occurrences,
+			};
+
+			if (contactID) {
+				activityIdentity.identity.user = {
+					id : contactID,
+				};
+			}
 
 			const response = await axios({
 				method  : 'POST',
 				url     : `https://usage.clientsuccess.com/collector/1.0.0/projects/${this.eventsProjectID}/events/${encodeURIComponent(activity)}?api_key=${this.eventsAPIKey}`,
 				headers : { 'Content-Type' : 'application/json' },
-				data    : {
-					identity : {
-						organization : {
-							id   : client.id,
-							name : client.name,
-						},
-						user : {
-							id    : contact.id,
-							name  : `${contact.firstName} ${contact.lastName}`,
-							email : contact.email,
-						},
-					},
-					value : occurrences,
-				},
+				data    : activityIdentity,
 			});
 
 			return response;

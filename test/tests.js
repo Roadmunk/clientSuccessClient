@@ -728,8 +728,13 @@ describe('clientSuccessClient', function() {
 			CS.closeClient(testClient.id);
 		});
 
-		it('should send activity to ClientSuccess for a Client/Contact', async function() {
-			const trackActivity = await CS.trackActivity(testClient.id, testContact.id, 'Login');
+		it('should send activity to ClientSuccess for a Client', async function() {
+			const trackActivity = await CS.trackActivity({ clientID : 90273708, activity : 'Login' });
+			expect(trackActivity.status).to.equal(201);
+		});
+
+		it('should send activity to ClientSuccess for a Client with a Contact', async function() {
+			const trackActivity = await CS.trackActivity({ clientID : 90273708, contactID : 8700478, activity : 'Login' });
 			expect(trackActivity.status).to.equal(201);
 		});
 
