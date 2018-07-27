@@ -502,5 +502,9 @@ JS.class(CustomError, {
 	constructor : function({ status, message }) {
 		this.status  = status;
 		this.message = message;
+	constructor : function({ status, message, userMessage }) {
+		this.status      = status;
+		this.message     = message;
+		this.userMessage = userMessage;
 	},
 });
