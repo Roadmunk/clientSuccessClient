@@ -429,9 +429,10 @@ JS.class(ClientSuccessClient, {
 
 		/**
 		 * Create a new ClientSuccess Product Type
-		 * @param  {String}  name               - Name of the new Product Type
-		 * @param  {Boolean} [recurring = true] - Denotes if Subscription is recurring or not
-		 * @return Promise<Object>              - Resulting ClientSuccess Subscription object
+		 * @param  {String}  name                     - Name of the new Product Type
+		 * @param  {Object}  [options]
+		 * @param  {Boolean} [options.recurring=true] - Denotes if Subscription is recurring or not
+		 * @return Promise<Object>                    - Resulting ClientSuccess Subscription object
 		 */
 		createProductType : async function(name, { recurring = true } = {}) {
 			if (!name) {
