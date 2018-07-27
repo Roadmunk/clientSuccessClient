@@ -433,7 +433,7 @@ JS.class(ClientSuccessClient, {
 		 * @param  {Boolean} [recurring = true] - Denotes if Subscription is recurring or not
 		 * @return Promise<Object>              - Resulting ClientSuccess Subscription object
 		 */
-		createProductType : async function({ name = undefined, recurring = true } = {}) {
+		createProductType : async function(name, { recurring = true } = {}) {
 			if (!name) {
 				throw new CustomError({ status : 400, message : 'Product Name Required' });
 			}

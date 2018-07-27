@@ -756,9 +756,7 @@ describe('clientSuccessClient', function() {
 
 	describe('createProductType', async function() {
 		it('should create a new product type', async function() {
-			const createdProduct = await CS.createProductType({
-				name : 'Test Suite Product',
-			});
+			const createdProduct = await CS.createProductType('Test Suite Product');
 			expect(createdProduct.id).is.not.null;
 			expect(createdProduct.name).to.equal('Test Suite Product');
 		});
