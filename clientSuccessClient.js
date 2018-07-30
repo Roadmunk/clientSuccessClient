@@ -465,23 +465,25 @@ JS.class(ClientSuccessClient, {
 			this.validateClientSuccessId(clientID);
 
 			const clientSubscriptions = await this.hitClientSuccessAPI('GET', `subscriptions?clientId=${clientID}`);
-			if (clientSubscriptions.length > 0) {
-				// ClientSuccess has outlined that Subscriptions that are considered 'Active' have attribute isPotential = false
-				// Loop through the returned array and pull out the 'Active' subscriptions
-				const activeSubscriptions = [];
-				for (let i = 0; i < clientSubscriptions.length; i++) {
-					if (clientSubscriptions[i].isPotential === undefined) {
-						throw new CustomError({ status : 404, message : 'Subscription isPotential attribute does not exist.' });
-					}
+			if (clientSubscriptions.length === 0) {
+				throw new CustomError({ status : 404, message : 'No subscriptions found for client' });
+			}
 
-					if (clientSubscriptions[i].isPotential === false) {
-						activeSubscriptions.push(clientSubscriptions[i]);
-					}
+			// ClientSuccess has outlined that Subscriptions that are considered 'Active' have attribute isPotential = false
+			// Loop through the returned array and pull out the 'Active' subscriptions
+			const activeSubscriptions = [];
+
+			_.forEach(clientSubscriptions, function(subscription) {
+				if (subscription.isPotential === undefined) {
+					throw new CustomError({ status : 404, message : 'Subscription isPotential attribute does not exist.' });
 				}
 
-				return activeSubscriptions;
-			}
-			throw new CustomError({ status : 404, message : 'No subscriptions found for client' });
+				if (subscription.isPotential === false && (subscription.terminationDate === null || subscription.renewedDate === null)) {
+					activeSubscriptions.push(subscription);
+				}
+			});
+
+			return activeSubscriptions;
 		},
 
 		/**
