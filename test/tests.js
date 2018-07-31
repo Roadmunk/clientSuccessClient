@@ -271,7 +271,7 @@ describe('clientSuccessClient', function() {
 		});
 
 		it('should automatically create a Client if there is an undefined clientId present in the function arguments', async function() {
-			const upsertedClientTestName = (new Date()).getTime();
+			const upsertedClientTestName = (new Date()).getTime().toString();
 			upsertedClient = await CS.upsertClient({
 				clientId   : undefined,
 				attributes : {
@@ -283,7 +283,7 @@ describe('clientSuccessClient', function() {
 		});
 
 		it('should automatically create a Client if there is a blank clientId present in the function arguments', async function() {
-			const upsertedClientTestName = (new Date()).getTime();
+			const upsertedClientTestName = (new Date()).getTime().toString();
 			upsertedClient = await CS.upsertClient({
 				clientId   : '',
 				attributes : {
@@ -295,7 +295,7 @@ describe('clientSuccessClient', function() {
 		});
 
 		it('should automatically create a Client if only attributes are passed in', async function() {
-			const upsertedClientTestName = (new Date()).getTime();
+			const upsertedClientTestName = (new Date()).getTime().toString();
 			upsertedClient = await CS.upsertClient({
 				attributes : {
 					name : upsertedClientTestName,
@@ -306,7 +306,7 @@ describe('clientSuccessClient', function() {
 		});
 
 		it('should update an existing Client if a clientId is passed', async function() {
-			const updatedTestClientName = (new Date()).getTime();
+			const updatedTestClientName = (new Date()).getTime().toString();
 			upsertedClient = await CS.upsertClient({
 				clientId   : testClient.id,
 				attributes : {
