@@ -796,10 +796,8 @@ describe('clientSuccessClient', function() {
 
 		before(async function() {
 			// create a test client with initial attributes to use in updateClient tests
-			const testClientName = `${(new Date()).getTime()}`;
-
 			const testClientAttributesInitial = {
-				name : testClientName,
+				name : (new Date()).getTime(),
 			};
 
 			testClient = await CS.createClient(testClientAttributesInitial);
