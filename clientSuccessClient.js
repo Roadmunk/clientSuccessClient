@@ -506,6 +506,32 @@ JS.class(ClientSuccessClient, {
 JS.class(CustomError, {
 	inherits : Error,
 
+	fields : {
+		/**
+		 * HTTP error status code
+		 * @type {String}
+		 */
+		status : {
+			type : String,
+		},
+
+		/**
+		 * Generalized error message
+		 * @type {String}
+		 */
+		message : {
+			type : String,
+		},
+
+		/**
+		 * Message ClientSuccess returns in their Error reponses
+		 * @type {String}
+		 */
+		userMessage : {
+			type : String,
+		},
+	},
+
 	constructor : function({ status, message, userMessage }) {
 		this.status      = status;
 		this.message     = message;
