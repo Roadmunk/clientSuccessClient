@@ -459,7 +459,7 @@ JS.class(ClientSuccessClient, {
 		/**
 		 * Get all subscription items for a client
 		 * @param  {String} clientID - ClientSuccess Client ID
-		 * @return Promise<Object>   - Subscriptions list for the provided Client ID
+		 * @return Promise<Object[]>   - Subscriptions list for the provided Client ID
 		 */
 		getClientActiveSubscriptions : async function(clientID) {
 			this.validateClientSuccessId(clientID);
@@ -498,9 +498,7 @@ JS.class(ClientSuccessClient, {
 			// add clientID to the attributes array
 			const finalAttributes = Object.assign(attributes, { clientId : clientID });
 
-			const clientSubscription = await this.hitClientSuccessAPI('POST', 'subscriptions', finalAttributes);
-
-			return clientSubscription;
+			return this.hitClientSuccessAPI('POST', 'subscriptions', finalAttributes);
 		},
 	},
 });
