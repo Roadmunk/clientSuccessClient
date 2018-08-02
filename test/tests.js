@@ -782,7 +782,7 @@ describe('clientSuccessClient', function() {
 	describe('getClientActiveSubscriptions', async function() {
 		it('should return subscription items for a client', async function() {
 			const clientSubscriptions = await CS.getClientActiveSubscriptions(90280083);
-			expect(clientSubscriptions.length).to.equal(1);
+			expect(clientSubscriptions).to.have.length(1);
 		});
 
 		it('should return a 404 if there are no subscriptions found for the client', async function() {
@@ -809,7 +809,6 @@ describe('clientSuccessClient', function() {
 
 		it('should successfully create a ClientSuccess subscription', async function() {
 			const testProductId = await CS.getProductId('Collaborators');
-			// console.log(`Creating subscription under product ID: ${testProductId} with client ID: ${testClient.id}`);
 			const clientSubscription = await CS.createClientSubscription(testClient.id, {
 				productId   : testProductId,
 				isRecurring : true,

@@ -434,7 +434,7 @@ JS.class(ClientSuccessClient, {
 		 * @param  {Boolean} [options.recurring=true] - Denotes if Subscription is recurring or not
 		 * @return Promise<Object>                    - Resulting ClientSuccess Subscription object
 		 */
-		createProductType : async function(name, { recurring = true } = {}) {
+		createProductType : function(name, { recurring = true } = {}) {
 			if (!name) {
 				throw new CustomError({ status : 400, message : 'Product Name Required' });
 			}
@@ -448,7 +448,7 @@ JS.class(ClientSuccessClient, {
 			return this.hitClientSuccessAPI('POST', 'products', productAttributes);
 		},
 
-		deleteProduct : async function(productId) {
+		deleteProduct : function(productId) {
 			if (!productId) {
 				throw new CustomError({ status : 400, message : 'Product ID Required for Deletion' });
 			}
@@ -471,19 +471,15 @@ JS.class(ClientSuccessClient, {
 
 			// ClientSuccess has outlined that Subscriptions that are considered 'Active' have attribute isPotential = false
 			// Loop through the returned array and pull out the 'Active' subscriptions
-			const activeSubscriptions = [];
-
-			_.forEach(clientSubscriptions, function(subscription) {
+			return clientSubscriptions.filter(function(subscription) {
 				if (subscription.isPotential === undefined) {
 					throw new CustomError({ status : 404, message : 'Subscription isPotential attribute does not exist.' });
 				}
 
 				if (subscription.isPotential === false && (subscription.terminationDate === null || subscription.renewedDate === null)) {
-					activeSubscriptions.push(subscription);
+					return true;
 				}
 			});
-
-			return activeSubscriptions;
 		},
 
 		/**
@@ -492,11 +488,11 @@ JS.class(ClientSuccessClient, {
 		 * @param  {Object} attributes - List of Subscription attributes
 		 * @return Promise<Object>     - Resulting ClientSuccess Subscription created
 		 */
-		createClientSubscription : async function(clientID, attributes) {
+		createClientSubscription : function(clientID, attributes) {
 			this.validateClientSuccessId(clientID);
 
 			// add clientID to the attributes array
-			const finalAttributes = Object.assign(attributes, { clientId : clientID });
+			const finalAttributes = Object.assign({}, attributes, { clientId : clientID });
 
 			return this.hitClientSuccessAPI('POST', 'subscriptions', finalAttributes);
 		},
@@ -512,14 +508,6 @@ JS.class(CustomError, {
 		 * @type {String}
 		 */
 		status : {
-			type : String,
-		},
-
-		/**
-		 * Generalized error message
-		 * @type {String}
-		 */
-		message : {
 			type : String,
 		},
 
