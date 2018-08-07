@@ -85,16 +85,18 @@ JS.class(ClientSuccessClient, {
 						this.authToken = null;
 					}
 					else if (error.response.status === 503) {
-						throw new CustomError({ status : 503, message : 'Service Temporarily Unavailable' });
+						throw new CustomError({ status : 503, message : 'Service Temporarily Unavailable', userMessage : error.response.data.userMessage });
 					}
 					else if (error.response.status === 417) {
-						throw new CustomError({ status : 417, message : 'Expectation Failed' });
+						throw new CustomError({ status : 417, message : 'Expectation Failed', userMessage : error.response.data.userMessage });
 					}
 					else if (error.response.status === 404) {
-						throw new CustomError({ status : 404, message : 'Not Found' });
+						throw new CustomError({ status : 404, message : 'Not Found', userMessage : error.response.data.userMessage });
+					}
+					else if (error.response.status === 400) {
+						throw new CustomError({ status : 400, message : 'Bad Request', userMessage : error.response.data.userMessage });
 					}
 					else {
-						// Package up the resulting API error for the function caller to handle on the other end
 						throw new CustomError({ status : error.response.status, message : error.response.message });
 					}
 				}
@@ -407,14 +409,120 @@ JS.class(ClientSuccessClient, {
 
 			return response;
 		},
+
+		/**
+		 * Get ClientSuccess product ID based on product name
+		 * @param  {String} productName - Name of the Product
+		 * @return {Integer}            - ID of the Product
+		 */
+		getProductId : async function(productName) {
+			const clientSuccessProducts = await this.hitClientSuccessAPI('GET', 'products');
+
+			const foundProduct = _.find(clientSuccessProducts, { active : true, name : productName });
+
+			if (foundProduct) {
+				return foundProduct.id;
+			}
+
+			throw new CustomError({ status : 404, message : 'Product not found' });
+		},
+
+		/**
+		 * Create a new ClientSuccess Product Type
+		 * @param  {String}  name                     - Name of the new Product Type
+		 * @param  {Object}  [options]
+		 * @param  {Boolean} [options.recurring=true] - Denotes if Subscription is recurring or not
+		 * @return Promise<Object>                    - Resulting ClientSuccess Subscription object
+		 */
+		createProductType : function(name, { recurring = true } = {}) {
+			if (!name) {
+				throw new CustomError({ status : 400, message : 'Product Name Required' });
+			}
+
+			const productAttributes = {
+				name,
+				recurring,
+				active : true,
+			};
+
+			return this.hitClientSuccessAPI('POST', 'products', productAttributes);
+		},
+
+		deleteProduct : function(productId) {
+			if (!productId) {
+				throw new CustomError({ status : 400, message : 'Product ID Required for Deletion' });
+			}
+
+			return this.hitClientSuccessAPI('DELETE', `products/${productId}`);
+		},
+
+		/**
+		 * Get all subscription items for a client
+		 * @param  {String} clientID - ClientSuccess Client ID
+		 * @return Promise<Object[]>   - Subscriptions list for the provided Client ID
+		 */
+		getClientActiveSubscriptions : async function(clientID) {
+			this.validateClientSuccessId(clientID);
+
+			const clientSubscriptions = await this.hitClientSuccessAPI('GET', `subscriptions?clientId=${clientID}`);
+			if (clientSubscriptions.length === 0) {
+				throw new CustomError({ status : 404, message : 'No subscriptions found for client' });
+			}
+
+			// ClientSuccess has outlined that Subscriptions that are considered 'Active' have attribute isPotential = false
+			// Loop through the returned array and pull out the 'Active' subscriptions
+			return clientSubscriptions.filter(function(subscription) {
+				if (subscription.isPotential === undefined) {
+					throw new CustomError({ status : 404, message : 'Subscription isPotential attribute does not exist.' });
+				}
+
+				if (subscription.isPotential === false && (subscription.terminationDate === null || subscription.renewedDate === null)) {
+					return true;
+				}
+			});
+		},
+
+		/**
+		 * Create a ClientSuccess Subscription line item under the passed Client
+		 * @param  {String} clientID   - ClientSuccess Client
+		 * @param  {Object} attributes - List of Subscription attributes
+		 * @return Promise<Object>     - Resulting ClientSuccess Subscription created
+		 */
+		createClientSubscription : function(clientID, attributes) {
+			this.validateClientSuccessId(clientID);
+
+			// add clientID to the attributes array
+			const finalAttributes = Object.assign({}, attributes, { clientId : clientID });
+
+			return this.hitClientSuccessAPI('POST', 'subscriptions', finalAttributes);
+		},
 	},
 });
 
 JS.class(CustomError, {
 	inherits : Error,
 
-	constructor : function({ status, message }) {
-		this.status  = status;
-		this.message = message;
+	fields : {
+		/**
+		 * HTTP error status code
+		 * @type {String}
+		 */
+		status : {
+			type : String,
+		},
+
+		/**
+		 * Message ClientSuccess returns in their Error reponses
+		 * @type {String}
+		 */
+		userMessage : {
+			type : String,
+		},
+	},
+
+	constructor : function({ status, message, userMessage }) {
+		this.status      = status;
+		this.message     = message;
+		this.userMessage = userMessage;
 	},
 });
