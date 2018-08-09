@@ -213,7 +213,21 @@ JS.class(ClientSuccessClient, {
 			this.validateClientSuccessId(clientId);
 			this.validateClientSuccessId(contactId);
 
-			return this.hitClientSuccessAPI('GET', `clients/${clientId}/contacts/${contactId}/details`);
+			let foundClient;
+			try {
+				foundClient = await this.hitClientSuccessAPI('GET', `clients/${clientId}/contacts/${contactId}/details`);
+			}
+			catch (error) {
+				if (error.status === 417) {
+					// Contact was not found, return a 404 instead
+					throw new CustomError({ status : 404, message : 'Contact not found', userMessage : error.userMessage });
+				}
+				else {
+					throw new CustomError({ status : error.status, message : error.message, userMessage : error.userMessage });
+				}
+			}
+
+			return foundClient;
 		},
 
 		/**
