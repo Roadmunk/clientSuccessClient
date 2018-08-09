@@ -97,7 +97,7 @@ JS.class(ClientSuccessClient, {
 						throw new CustomError({ status : 400, message : 'Bad Request', userMessage : error.response.data.userMessage });
 					}
 					else {
-						throw new CustomError({ status : error.response.status, message : error.response.message });
+						throw new CustomError({ status : error.response.status, message : error.response.message, userMessage : error.response.data.userMessage });
 					}
 				}
 			}
