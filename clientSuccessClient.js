@@ -220,7 +220,7 @@ JS.class(ClientSuccessClient, {
 			catch (error) {
 				if (error.status === 417) {
 					// Contact was not found, return a 404 instead of a 417
-					// This is an issue with the ClientSuccess adapter as of 10/08/18, that will be addressed in V2 of their API
+					// This is an issue with the ClientSuccess API as of 2018-08-10, that will be addressed in V2 of their API
 					throw new CustomError({ status : 404, message : 'Contact not found', userMessage : error.userMessage });
 				}
 				else {
