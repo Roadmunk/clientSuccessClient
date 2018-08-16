@@ -381,7 +381,12 @@ describe('clientSuccessClient', function() {
 
 		it('should return back a 404 error object when the contact does not exist', async function() {
 			// using Client ID 90267712 that does actually exist, with a 0 contact ID that does not
-			expect(CS.getContact(90267712, 123)).to.eventually.be.rejectedWith({ status : 404 });
+			try {
+				await CS.getContact(90267712, 123);
+			}
+			catch (error) {
+				expect(error.status).to.equal(404);
+			}
 		});
 
 		it('should throw an error when we pass an invalid data type in');
@@ -667,6 +672,18 @@ describe('clientSuccessClient', function() {
 			expect(upsertedContact.firstName).to.equal(`${upsertedContactTestName}updated`);
 			expect(upsertedContact.lastName).to.equal(`${upsertedContactTestName}updated`);
 			expect(upsertedContact.customFieldValues[1].value).to.equal(`${upsertedContactTestName}updated`);
+		});
+
+		it('should return a 404 if the contact to be upserted does not exist in the client', async function() {
+			try {
+				await CS.upsertContact({
+					clientId  : testClient.id,
+					contactId : 123,
+				});
+			}
+			catch (error) {
+				expect(error.status).to.equal(404);
+			}
 		});
 	});
 

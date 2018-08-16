@@ -97,7 +97,7 @@ JS.class(ClientSuccessClient, {
 						throw new CustomError({ status : 400, message : 'Bad Request', userMessage : error.response.data.userMessage });
 					}
 					else {
-						throw new CustomError({ status : error.response.status, message : error.response.message });
+						throw new CustomError({ status : error.response.status, message : error.response.message, userMessage : error.response.data.userMessage });
 					}
 				}
 			}
@@ -213,7 +213,22 @@ JS.class(ClientSuccessClient, {
 			this.validateClientSuccessId(clientId);
 			this.validateClientSuccessId(contactId);
 
-			return this.hitClientSuccessAPI('GET', `clients/${clientId}/contacts/${contactId}/details`);
+			let foundClient;
+			try {
+				foundClient = await this.hitClientSuccessAPI('GET', `clients/${clientId}/contacts/${contactId}/details`);
+			}
+			catch (error) {
+				if (error.status === 417) {
+					// Contact was not found, return a 404 instead of a 417
+					// This is an issue with the ClientSuccess API as of 2018-08-10, that will be addressed in V2 of their API
+					throw new CustomError({ status : 404, message : 'Contact not found', userMessage : error.userMessage });
+				}
+				else {
+					throw new CustomError({ status : error.status, message : error.message, userMessage : error.userMessage });
+				}
+			}
+
+			return foundClient;
 		},
 
 		/**
