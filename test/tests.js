@@ -674,7 +674,7 @@ describe('clientSuccessClient', function() {
 			expect(upsertedContact.customFieldValues[1].value).to.equal(`${upsertedContactTestName}updated`);
 		});
 
-		it.only('should return a 404 if the contact to be upserted does not exist in the client', async function() {
+		it('should return a 404 if the contact to be upserted does not exist in the client', async function() {
 			try {
 				await CS.upsertContact({
 					clientId  : testClient.id,
