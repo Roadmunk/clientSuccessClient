@@ -511,6 +511,22 @@ JS.class(ClientSuccessClient, {
 
 			return this.hitClientSuccessAPI('POST', 'subscriptions', finalAttributes);
 		},
+
+		/**
+		 * Update a ClientSuccess Client subscription
+		 * @param  {Object} subscriptionObject - Subscription object to update (we can't get subscription info for a single subscription, so we need to get the entire object)
+		 * @param  {Object} attributesToUpdate - Attribute array to update the subscription with
+		 * @return Promise<Object>             - Resulting ClientSuccess Subscription that was updated
+		 */
+		updateClientSubscription : async function(subscriptionObject, attributesToUpdate) {
+			if (!subscriptionObject.id) {
+				throw new CustomError({ status : 400, message : 'Passed subscription object does not have an ID' });
+			}
+
+			Object.assign(subscriptionObject, attributesToUpdate);
+
+			return this.hitClientSuccessAPI('PUT', `subscriptions/${subscriptionObject.id}`, subscriptionObject);
+		},
 	},
 });
 
