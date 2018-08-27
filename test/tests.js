@@ -3,6 +3,7 @@
 const ClientSuccess = require('../clientSuccessClient');
 const chai          = require('chai');
 const expect        = require('chai').expect;
+const moment        = require('moment');
 
 const config = require('./config');
 
@@ -865,6 +866,53 @@ describe('clientSuccessClient', function() {
 			};
 
 			expect(CS.createClientSubscription('123', testSubscriptionAttributes)).to.eventually.be.rejectedWith({ status : 404 });
+		});
+	});
+
+	describe('updateClientSubscription', async function() {
+		let testClient;
+		let testSubscription;
+		before(async function() {
+			// create test user
+			const testClientAttributesInitial = {
+				name : (new Date()).getTime(),
+			};
+
+			testClient = await CS.createClient(testClientAttributesInitial);
+
+			// create a test subscription under the above user
+			const testProductId = await CS.getProductId('Collaborators');
+			testSubscription = await CS.createClientSubscription(testClient.id, {
+				productId   : testProductId,
+				isRecurring : true,
+				amount      : 10000,
+				quantity    : 1,
+				startDate   : '2018-05-25',
+				endDate     : '2019-05-24',
+				isPotential : false,
+				autoRenew   : false,
+				note        : {
+					note : 'test note',
+				},
+			});
+		});
+
+		it('should update an existing subscription', async function() {
+			const updatedSubscriptionAttributes = {
+				amount : 500,
+			};
+			const updatedSubscription = await CS.updateClientSubscription(testSubscription, updatedSubscriptionAttributes);
+			expect(updatedSubscription.amount).to.equal(500);
+		});
+
+		it('should terminate an existing subscription', async function() {
+			let dateTime = new Date();
+			dateTime = moment(dateTime).format('YYYY-MM-DD');
+			const updatedSubscriptionAttributes = {
+				terminationDate : dateTime,
+			};
+			const updatedSubscription = await CS.updateClientSubscription(testSubscription, updatedSubscriptionAttributes);
+			expect(updatedSubscription.terminationDate).to.equal(dateTime);
 		});
 	});
 
