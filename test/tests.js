@@ -907,8 +907,7 @@ describe('clientSuccessClient', function() {
 		});
 
 		it('should terminate an existing subscription', async function() {
-			const dateTime = new Moment().format('YYYY-MM-DD');
-
+			const dateTime                      = new Moment().format('YYYY-MM-DD');
 			const updatedSubscriptionAttributes = {
 				terminationDate : dateTime,
 			};
