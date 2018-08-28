@@ -3,7 +3,7 @@
 const ClientSuccess = require('../clientSuccessClient');
 const chai          = require('chai');
 const expect        = require('chai').expect;
-const moment        = require('moment');
+const Moment        = require('moment');
 
 const config = require('./config');
 
@@ -831,9 +831,9 @@ describe('clientSuccessClient', function() {
 		});
 
 		it('should successfully create a ClientSuccess subscription', async function() {
-			const testProductId = await CS.getProductId('Collaborators');
+			const testProductID = await CS.getProductId('Collaborators');
 			const clientSubscription = await CS.createClientSubscription(testClient.id, {
-				productId   : testProductId,
+				productId   : testProductID,
 				isRecurring : true,
 				amount      : 10000,
 				quantity    : 1,
@@ -850,10 +850,10 @@ describe('clientSuccessClient', function() {
 		});
 
 		it('should error with 404 if ClientSuccess Client ID does not exist', async function() {
-			const testProductId = await CS.getProductId('Collaborators');
+			const testProductID = await CS.getProductId('Collaborators');
 
 			const testSubscriptionAttributes = {
-				productId   : testProductId,
+				productId   : testProductID,
 				isRecurring : true,
 				amount      : 10000,
 				quantity    : 1,
@@ -881,9 +881,9 @@ describe('clientSuccessClient', function() {
 			testClient = await CS.createClient(testClientAttributesInitial);
 
 			// create a test subscription under the above user
-			const testProductId = await CS.getProductId('Collaborators');
+			const testProductID = await CS.getProductId('Collaborators');
 			testSubscription = await CS.createClientSubscription(testClient.id, {
-				productId   : testProductId,
+				productId   : testProductID,
 				isRecurring : true,
 				amount      : 10000,
 				quantity    : 1,
@@ -898,16 +898,17 @@ describe('clientSuccessClient', function() {
 		});
 
 		it('should update an existing subscription', async function() {
+			const newAmount = 500;
 			const updatedSubscriptionAttributes = {
-				amount : 500,
+				amount : newAmount,
 			};
 			const updatedSubscription = await CS.updateClientSubscription(testSubscription, updatedSubscriptionAttributes);
-			expect(updatedSubscription.amount).to.equal(500);
+			expect(updatedSubscription.amount).to.equal(newAmount);
 		});
 
 		it('should terminate an existing subscription', async function() {
-			let dateTime = new Date();
-			dateTime = moment(dateTime).format('YYYY-MM-DD');
+			const dateTime = new Moment().format('YYYY-MM-DD');
+
 			const updatedSubscriptionAttributes = {
 				terminationDate : dateTime,
 			};
