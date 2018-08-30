@@ -3,6 +3,7 @@
 const ClientSuccess = require('../clientSuccessClient');
 const chai          = require('chai');
 const expect        = require('chai').expect;
+const Moment        = require('moment');
 
 const config = require('./config');
 
@@ -830,9 +831,9 @@ describe('clientSuccessClient', function() {
 		});
 
 		it('should successfully create a ClientSuccess subscription', async function() {
-			const testProductId = await CS.getProductId('Collaborators');
+			const testProductID = await CS.getProductId('Collaborators');
 			const clientSubscription = await CS.createClientSubscription(testClient.id, {
-				productId   : testProductId,
+				productId   : testProductID,
 				isRecurring : true,
 				amount      : 10000,
 				quantity    : 1,
@@ -849,10 +850,10 @@ describe('clientSuccessClient', function() {
 		});
 
 		it('should error with 404 if ClientSuccess Client ID does not exist', async function() {
-			const testProductId = await CS.getProductId('Collaborators');
+			const testProductID = await CS.getProductId('Collaborators');
 
 			const testSubscriptionAttributes = {
-				productId   : testProductId,
+				productId   : testProductID,
 				isRecurring : true,
 				amount      : 10000,
 				quantity    : 1,
@@ -865,6 +866,54 @@ describe('clientSuccessClient', function() {
 			};
 
 			expect(CS.createClientSubscription('123', testSubscriptionAttributes)).to.eventually.be.rejectedWith({ status : 404 });
+		});
+	});
+
+	describe('updateClientSubscription', async function() {
+		let testClient;
+		let testSubscription;
+		before(async function() {
+			// create test user
+			const testClientAttributesInitial = {
+				name : (new Date()).getTime(),
+			};
+
+			testClient = await CS.createClient(testClientAttributesInitial);
+
+			// create a test subscription under the above user
+			const testProductID = await CS.getProductId('Collaborators');
+			testSubscription = await CS.createClientSubscription(testClient.id, {
+				productId   : testProductID,
+				isRecurring : true,
+				amount      : 10000,
+				quantity    : 1,
+				startDate   : '2018-05-25',
+				endDate     : '2019-05-24',
+				isPotential : false,
+				autoRenew   : false,
+				note        : {
+					note : 'test note',
+				},
+			});
+		});
+
+		it('should update an existing subscription', async function() {
+			const newAmount = 500;
+			const updatedSubscriptionAttributes = {
+				amount : newAmount,
+			};
+			const updatedSubscription = await CS.updateClientSubscription(testSubscription, updatedSubscriptionAttributes);
+			expect(updatedSubscription.amount).to.equal(newAmount);
+		});
+
+		it('should terminate an existing subscription', async function() {
+			// this test only tests the setting of 'terminationDate', not the actual termination of the subscription
+			const dateTime                      = new Moment().format('YYYY-MM-DD');
+			const updatedSubscriptionAttributes = {
+				terminationDate : dateTime,
+			};
+			const updatedSubscription = await CS.updateClientSubscription(testSubscription, updatedSubscriptionAttributes);
+			expect(updatedSubscription.terminationDate).to.equal(dateTime);
 		});
 	});
 
