@@ -916,6 +916,51 @@ describe('clientSuccessClient', function() {
 		});
 	});
 
+	describe('deleteClientSubscription', async function() {
+		let testClient;
+		let testSubscription;
+		before(async function() {
+			// create test user
+			const testClientAttributesInitial = {
+				name : (new Date()).getTime(),
+			};
+
+			testClient = await CS.createClient(testClientAttributesInitial);
+
+			// create a test subscription under the above user
+			const testProductID = await CS.getProductId('Collaborators');
+			testSubscription = await CS.createClientSubscription(testClient.id, {
+				productId   : testProductID,
+				isRecurring : true,
+				amount      : 10000,
+				quantity    : 1,
+				startDate   : '2018-05-25',
+				endDate     : '2019-05-24',
+				isPotential : false,
+				autoRenew   : false,
+				note        : {
+					note : 'test note',
+				},
+			});
+		});
+
+		it('should delete an existing subscription', async function() {
+			await CS.deleteClientSubscription(testSubscription.id);
+			try {
+				await CS.getClientActiveSubscriptions(testClient.id);
+			}
+			catch (error) {
+				expect(error.status).to.equal(404);
+			}
+		});
+
+		it('should gracefully fail when trying to delete a subscription that does not exist', async function() {
+			const response = await CS.deleteClientSubscription(123);
+			// ClientSuccess returns back a 200 on deletion error with an object with a key of 'error' that can be checked against
+			expect('error' in response).to.equal(true);
+		});
+	});
+
 	describe('cleanup', async function() {
 		if (runWriteTests) {
 			// set a longer timeout for this function as it will surely take longer than 2 seconds to clean everything

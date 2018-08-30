@@ -527,6 +527,19 @@ JS.class(ClientSuccessClient, {
 
 			return this.hitClientSuccessAPI('PUT', `subscriptions/${subscriptionObject.id}`, subscriptionObject);
 		},
+
+		/**
+		 * Delete a ClientSuccess Client subscription
+		 * @param  {Integer} subscriptionID - Subscription ID of the subscription to be deleted
+		 * @return {Object}                 - Response object of deletion result
+		 */
+		deleteClientSubscription : async function(subscriptionID) {
+			if (!subscriptionID) {
+				throw new CustomError({ status : 400, message : 'Subscription ID Not Provided' });
+			}
+
+			return this.hitClientSuccessAPI('DELETE', `subscriptions/${subscriptionID}`);
+		},
 	},
 });
 
