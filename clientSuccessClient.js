@@ -514,7 +514,7 @@ JS.class(ClientSuccessClient, {
 
 		/**
 		 * Update a ClientSuccess Client subscription
-		 * @param  {Object} subscriptionObject - Subscription object to update (we can't get subscription info for a single subscription, so we need to get the entire object)
+		 * @param  {Object} subscriptionObject - Subscription object to update
 		 * @param  {Object} attributesToUpdate - Attribute object to update the subscription with
 		 * @return Promise<Object>             - Resulting ClientSuccess Subscription that was updated
 		 */

@@ -907,6 +907,7 @@ describe('clientSuccessClient', function() {
 		});
 
 		it('should terminate an existing subscription', async function() {
+			// this test only tests the setting of 'terminationDate', not the actual termination of the subscription
 			const dateTime                      = new Moment().format('YYYY-MM-DD');
 			const updatedSubscriptionAttributes = {
 				terminationDate : dateTime,
