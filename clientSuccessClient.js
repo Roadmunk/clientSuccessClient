@@ -1,6 +1,7 @@
-const JS    = require('@roadmunk/jsclass/JS');
-const axios = require('axios');
-const _     = require('lodash');
+const JS     = require('@roadmunk/jsclass/JS');
+const axios  = require('axios');
+const _      = require('lodash');
+const moment = require('moment');
 
 const RETRY_LIMIT                  = 10;	// number of retry attempts for any given API call
 const URL                          = 'https://api.clientsuccess.com/v1/';
@@ -394,8 +395,9 @@ JS.class(ClientSuccessClient, {
 		 * @param  {String}  contactID       - ID of the contact that the activity originated from
 		 * @param  {String}  activity        - Activity name that occurred
 		 * @param  {Integer} [occurrences=1] - Number of times that the user completed this action
+		 * @param  {Date}    [timestamp]     - ISO 8601 formatted timestamp that the event occured
 		 */
-		trackActivity : async function({ clientID = undefined, contactID = undefined, activity = undefined, occurrences = 1 }) {
+		trackActivity : async function({ clientID = undefined, contactID = undefined, activity = undefined, occurrences = 1, timestamp = undefined }) {
 			this.validateClientSuccessId(clientID);
 			const client   = await this.getClient(clientID);
 
@@ -407,6 +409,9 @@ JS.class(ClientSuccessClient, {
 					},
 				},
 				value : occurrences,
+				keen  : {
+					timestamp : timestamp ? moment(timestamp).toISOString() : '',
+				},
 			};
 
 			if (contactID) {
