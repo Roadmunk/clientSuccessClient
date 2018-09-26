@@ -3,7 +3,7 @@
 const ClientSuccess = require('../clientSuccessClient');
 const chai          = require('chai');
 const expect        = require('chai').expect;
-const Moment        = require('Moment');
+const Moment        = require('moment');
 
 const config = require('./config');
 

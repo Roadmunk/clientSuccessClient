@@ -1,7 +1,7 @@
 const JS     = require('@roadmunk/jsclass/JS');
 const axios  = require('axios');
 const _      = require('lodash');
-const Moment = require('Moment');
+const Moment = require('moment');
 
 const RETRY_LIMIT                  = 10;	// number of retry attempts for any given API call
 const URL                          = 'https://api.clientsuccess.com/v1/';
@@ -400,8 +400,7 @@ JS.class(ClientSuccessClient, {
 		 */
 		trackActivity : async function({ clientID, contactID, activity, occurrences = 1, timestamp } = {}) {
 			this.validateClientSuccessId(clientID);
-			const client   = await this.getClient(clientID);
-
+			const client           = await this.getClient(clientID);
 			const activityIdentity = {
 				identity : {
 					organization : {
