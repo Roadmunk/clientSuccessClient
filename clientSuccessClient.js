@@ -1,6 +1,7 @@
-const JS    = require('@roadmunk/jsclass/JS');
-const axios = require('axios');
-const _     = require('lodash');
+const JS     = require('@roadmunk/jsclass/JS');
+const axios  = require('axios');
+const _      = require('lodash');
+const Moment = require('moment');
 
 const RETRY_LIMIT                  = 10;	// number of retry attempts for any given API call
 const URL                          = 'https://api.clientsuccess.com/v1/';
@@ -390,15 +391,16 @@ JS.class(ClientSuccessClient, {
 
 		/**
 		 * Track user activity into the ClientSuccess usage module
-		 * @param  {String}  clientID        - ID of the ClientSuccess client that the usage will be logged under
-		 * @param  {String}  contactID       - ID of the contact that the activity originated from
-		 * @param  {String}  activity        - Activity name that occurred
-		 * @param  {Integer} [occurrences=1] - Number of times that the user completed this action
+		 * @param  {Object}  [options]
+		 * @param  {String}  [options.clientID]      - ID of the ClientSuccess client that the usage will be logged under
+		 * @param  {String}  [options.contactID]     - ID of the contact that the activity originated from
+		 * @param  {String}  [options.activity]      - Activity name that occurred
+		 * @param  {Number}  [options.occurrences=1] - Number of times that the user completed this action
+		 * @param  {Date}    [options.timestamp]     - ISO 8601 formatted timestamp that the event occured
 		 */
-		trackActivity : async function({ clientID = undefined, contactID = undefined, activity = undefined, occurrences = 1 }) {
+		trackActivity : async function({ clientID, contactID, activity, occurrences = 1, timestamp } = {}) {
 			this.validateClientSuccessId(clientID);
-			const client   = await this.getClient(clientID);
-
+			const client           = await this.getClient(clientID);
 			const activityIdentity = {
 				identity : {
 					organization : {
@@ -407,6 +409,9 @@ JS.class(ClientSuccessClient, {
 					},
 				},
 				value : occurrences,
+				keen  : {
+					timestamp : timestamp ? new Moment(timestamp).toISOString() : '',
+				},
 			};
 
 			if (contactID) {

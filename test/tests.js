@@ -763,6 +763,12 @@ describe('clientSuccessClient', function() {
 		it('should error when client does not exist', async function() {
 			expect(CS.trackActivity(123, 123, 'DNE')).to.eventually.be.rejectedWith({ status : 404 });
 		});
+
+		it('should accept a keen timestamp when logging events', async function() {
+			const trackActivity = await CS.trackActivity({ clientID : 90273708, activity : 'Login', timestamp : '2018-09-10T20:34:13.179Z' });
+			expect(trackActivity.status).to.equal(201);
+		});
+
 	});
 
 	describe('getProductId', async function() {
