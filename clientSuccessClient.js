@@ -190,8 +190,7 @@ JS.class(ClientSuccessClient, {
 				const createdClient = await this.createClient(attributes, customAttributes);
 				return this.getClient(createdClient.id); // return fresh model that includes custom attributes
 			}
-			const updatedClient = await this.updateClient(clientId, attributes, customAttributes);
-			return this.getClient(updatedClient.id);
+			return this.updateClient(clientId, attributes, customAttributes);
 		},
 
 		/**
