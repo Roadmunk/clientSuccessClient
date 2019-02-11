@@ -117,7 +117,7 @@ JS.class(ClientSuccessClient, {
 				503 : 'Service Temporarily Unavailable',
 			};
 
-			const userMessage = `${typeof error.response.data.userMessage != 'undefined' ? error.response.data.userMessage : ''} ${metadata ? ` - ${metadata}` : ''}`;
+			const userMessage = `${typeof error.response.data.userMessage != 'undefined' ? error.response.data.userMessage : ''}${metadata ? ` - ${metadata}` : ''}`;
 
 			throw new CustomError({
 				status  : error.response.status,
