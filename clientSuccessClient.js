@@ -45,7 +45,7 @@ JS.class(ClientSuccessClient, {
 				}
 			}
 			catch (error) {
-				this.classifyClientSuccessError(error);
+				this.handleClientSuccessError(error);
 			}
 		},
 
@@ -82,7 +82,13 @@ JS.class(ClientSuccessClient, {
 						this.authToken = null;
 					}
 					else {
-						this.classifyClientSuccessError(error);
+						const metadata = {
+							method,
+							path,
+							data,
+						};
+
+						this.handleClientSuccessError(error, JSON.stringify(metadata));
 					}
 				}
 			}
@@ -93,7 +99,7 @@ JS.class(ClientSuccessClient, {
 		 * DRY function for easy error classification and handling
 		 * @param  {Object} error Error object to be clasified and handled
 		 */
-		classifyClientSuccessError : function(error) {
+		handleClientSuccessError : function(error, metadata) {
 			if (typeof error.response == 'undefined') {
 				throw new CustomError({ status : 400, message : 'Bad Request', userMessage : `Undefined error response body - ${JSON.stringify(error)}` });
 			}
@@ -111,10 +117,12 @@ JS.class(ClientSuccessClient, {
 				503 : 'Service Temporarily Unavailable',
 			};
 
+			const userMessage = `${typeof error.response.data.userMessage != 'undefined' ? error.response.data.userMessage : ''} ${metadata ? ` - ${metadata}` : ''}`;
+
 			throw new CustomError({
-				status      : error.response.status,
-				message     : error.response.status in errorLegend ? errorLegend[error.response.status] : error.response.message,
-				userMessage : typeof error.response.data.userMessage != 'undefined' ? error.response.data.userMessage : '',
+				status  : error.response.status,
+				message : error.response.status in errorLegend ? errorLegend[error.response.status] : error.response.message,
+				userMessage,
 			});
 
 		},
