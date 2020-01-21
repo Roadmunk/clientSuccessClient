@@ -351,6 +351,29 @@ describe('clientSuccessClient', function() {
 		});
 	});
 
+	describe('deleteClient', async function() {
+		let testClient;
+
+		before(async function() {
+			// create a test client with initial attributes to use in deleteClient tests
+			const testClientName = `TEST user ${(new Date()).getTime()}`;
+			const testClientAttributesInitial = {
+				name : testClientName,
+			};
+
+			testClient = await CS.createClient(testClientAttributesInitial);
+		});
+
+		it('should delete an existing client if a clientId is passed', async function() {
+			await CS.deleteClient(testClient.id);
+			expect(CS.getClient(testClient.id)).to.eventually.be.rejectedWith({ status : 404 });
+		})
+
+		it('should return 404 if the client does not exist', async function() {
+			expect(CS.deleteClient('This would not be a valid id')).to.eventually.be.rejectedWith({ status : 404 });
+		});
+	});
+
 	describe('getContact', async function() {
 		this.timeout(15000);
 		it('should return back the object of an existing contact', async function() {
@@ -685,6 +708,39 @@ describe('clientSuccessClient', function() {
 			catch (error) {
 				expect(error.status).to.equal(404);
 			}
+		});
+	});
+
+	describe('deleteContact', async function() {
+		let testClient;
+		let testContact;
+
+		before(async function() {
+			// create a test client with initial attributes to use in deleteContact tests
+			const testClientName = `TEST user ${(new Date()).getTime()}`;
+			const testClientAttributesInitial = {
+				name : testClientName,
+			};
+
+			testClient = await CS.createClient(testClientAttributesInitial);
+
+			// create a test contact with initial attributes to use in deleteContact tests
+			const newContactName = `TEST user ${(new Date()).getTime()}`;
+			const testContactAttributes = {
+				firstName : newContactName,
+				lastName  : newContactName,
+			};
+
+			testContact = await CS.createContact(testClient.id, testContactAttributes);
+		});
+
+		it('should delete an existing contact if a clientId and contactId are passed', async function() {
+			await CS.deleteContact(testClient.id, testContact.id);
+			expect(CS.getContact(testContact.id)).to.eventually.be.rejectedWith({ status : 404 });
+		})
+
+		it('should return 404 if the contact does not exist', async function() {
+			expect(CS.deleteContact('This would not be a valid id', 'This should also not be a valid id')).to.eventually.be.rejectedWith({ status : 404 });
 		});
 	});
 

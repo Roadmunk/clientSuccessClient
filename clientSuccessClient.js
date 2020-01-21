@@ -205,6 +205,19 @@ JS.class(ClientSuccessClient, {
 		},
 
 		/**
+		 * Deletes a client from ClientSuccess with the given ID
+		 * @param  {String} clientId - Client ID of the Client that will be deleted
+		 * @return {Object}          - The response from the ClientSuccess API
+		 */
+		deleteClient : function(clientId) {
+			if (!clientId) {
+				throw new CustomError({ status : 400, message : 'Client ID Required for Deletion' });
+			}
+
+			return this.hitClientSuccessAPI('DELETE', `clients/${clientId}`);
+		},
+
+		/**
 		 * Get ClientSuccess Contact detail object.
 		 * @param {String} clientId  - ClientSuccess Client ID that contains the Contact
 		 * @param {String} contactId - ClientSuccess Contact ID
@@ -334,6 +347,20 @@ JS.class(ClientSuccessClient, {
 			}
 
 			return this.updateContact(clientId, contactId, attributes, customAttributes);
+		},
+
+		/**
+		 * Deletes a contact from ClientSuccess with the given IDs
+		 * @param  {String} clientId  - Client ID of the client the contact is part of
+		 * @param  {String} contactId - Contact ID of the contact to be deleted
+		 * @return {Object}           - The response from the ClientSuccess API
+		 */
+		deleteContact : function(clientId, contactId) {
+			if (!clientId || !contactId) {
+				throw new CustomError({ status : 400, message : 'Client ID and Contact ID Required for Deletion' });
+			}
+
+			return this.hitClientSuccessAPI('DELETE', `clients/${clientId}/contacts/${contactId}`);
 		},
 
 		/**
