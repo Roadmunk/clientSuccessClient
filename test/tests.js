@@ -367,7 +367,18 @@ describe('clientSuccessClient', function() {
 		it('should delete an existing client if a clientId is passed', async function() {
 			await CS.deleteClient(testClient.id);
 			expect(CS.getClient(testClient.id)).to.eventually.be.rejectedWith({ status : 404 });
-		})
+		});
+
+		it('should return 400 if the clientId is missing', async function() {
+			const expectedError = { status : 400, message : 'Client ID Required for Deletion' };
+			try {
+				await CS.deleteClient();
+			}
+			catch (error) {
+				expect(error.status).to.equal(expectedError.status);
+				expect(error.message).to.equal(expectedError.message);
+			}
+		});
 
 		it('should return 404 if the client does not exist', async function() {
 			expect(CS.deleteClient('This would not be a valid id')).to.eventually.be.rejectedWith({ status : 404 });
@@ -737,7 +748,19 @@ describe('clientSuccessClient', function() {
 		it('should delete an existing contact if a clientId and contactId are passed', async function() {
 			await CS.deleteContact(testClient.id, testContact.id);
 			expect(CS.getContact(testContact.id)).to.eventually.be.rejectedWith({ status : 404 });
-		})
+		});
+
+		it('should throw and return 400 if the contactId and/or clientId are missing', async function() {
+			const expectedError = { status : 400, message : 'Client ID and Contact ID Required for Deletion' };
+			try {
+				await CS.deleteContact(testClient.id);
+				await CS.deleteContact();
+			}
+			catch (error) {
+				expect(error.status).to.equal(expectedError.status);
+				expect(error.message).to.equal(expectedError.message);
+			}
+		});
 
 		it('should return 404 if the contact does not exist', async function() {
 			expect(CS.deleteContact('This would not be a valid id', 'This should also not be a valid id')).to.eventually.be.rejectedWith({ status : 404 });
