@@ -371,7 +371,7 @@ describe('clientSuccessClient', function() {
 
 		it('should return 400 if the clientId is missing', async function() {
 			const expectedError = { status : 400, message : 'Client ID Required for Deletion' };
-			expect(() => { CS.deleteClient() }).to.throw(expectedError.message).that.has.property('status').which.equals(expectedError.status);
+			await expect(CS.deleteClient()).to.be.rejected.and.eventually.include(expectedError);
 		});
 
 		it('should return 404 if the client does not exist', async function() {
@@ -746,8 +746,8 @@ describe('clientSuccessClient', function() {
 
 		it('should throw and return 400 if the clientId and/or contactId are missing', async function() {
 			const expectedError = { status : 400, message : 'Client ID and Contact ID Required for Deletion' };
-			expect(() => { CS.deleteContact(testClient.id) }).to.throw(expectedError.message).that.has.property('status').which.equals(expectedError.status);
-			expect(() => { CS.deleteContact() }).to.throw(expectedError.message).that.has.property('status').which.equals(expectedError.status);
+			await expect(CS.deleteContact()).to.be.rejected.and.eventually.include(expectedError);
+			await expect(CS.deleteContact(testClient.id)).to.be.rejected.and.eventually.include(expectedError);
 		});
 
 		it('should return 404 if the contact does not exist', async function() {

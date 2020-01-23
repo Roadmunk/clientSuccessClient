@@ -209,7 +209,7 @@ JS.class(ClientSuccessClient, {
 		 * @param  {String} clientId - Client ID of the Client that will be deleted
 		 * @return {Object}          - The response from the ClientSuccess API
 		 */
-		deleteClient : function(clientId) {
+		deleteClient : async function(clientId) {
 			if (!clientId) {
 				throw new CustomError({ status : 400, message : 'Client ID Required for Deletion' });
 			}
@@ -355,7 +355,7 @@ JS.class(ClientSuccessClient, {
 		 * @param  {String} contactId - Contact ID of the contact to be deleted
 		 * @return {Object}           - The response from the ClientSuccess API
 		 */
-		deleteContact : function(clientId, contactId) {
+		deleteContact : async function(clientId, contactId) {
 			if (!clientId || !contactId) {
 				throw new CustomError({ status : 400, message : 'Client ID and Contact ID Required for Deletion' });
 			}
