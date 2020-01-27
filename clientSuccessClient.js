@@ -121,7 +121,7 @@ JS.class(ClientSuccessClient, {
 		 * @param {String} externalId - External ID of Client
 		 * @returns {Object}          - ClientSuccess Client Data object
 		 */
-		getClientByExternalId : async function(externalId) {
+		getClientByExternalId : function(externalId) {
 			if (!externalId || !_.isString(externalId)) {
 				throw new CustomError({ status : 400, message : 'Invalid externalId for getClientByExternalId.' });
 			}
@@ -209,7 +209,7 @@ JS.class(ClientSuccessClient, {
 		 * @param  {String} clientId - Client ID of the Client that will be deleted
 		 * @return {Object}          - The response from the ClientSuccess API
 		 */
-		deleteClient : async function(clientId) {
+		deleteClient : function(clientId) {
 			if (!clientId) {
 				throw new CustomError({ status : 400, message : 'Client ID Required for Deletion' });
 			}
@@ -355,7 +355,7 @@ JS.class(ClientSuccessClient, {
 		 * @param  {String} contactId - Contact ID of the contact to be deleted
 		 * @return {Object}           - The response from the ClientSuccess API
 		 */
-		deleteContact : async function(clientId, contactId) {
+		deleteContact : function(clientId, contactId) {
 			if (!clientId || !contactId) {
 				throw new CustomError({ status : 400, message : 'Client ID and Contact ID Required for Deletion' });
 			}
@@ -550,7 +550,7 @@ JS.class(ClientSuccessClient, {
 		 * @param  {Object} attributesToUpdate - Attribute object to update the subscription with
 		 * @return Promise<Object>             - Resulting ClientSuccess Subscription that was updated
 		 */
-		updateClientSubscription : async function(subscriptionObject, attributesToUpdate) {
+		updateClientSubscription : function(subscriptionObject, attributesToUpdate) {
 			if (!subscriptionObject.id) {
 				throw new CustomError({ status : 400, message : 'Passed subscription object does not have an ID' });
 			}
@@ -565,7 +565,7 @@ JS.class(ClientSuccessClient, {
 		 * @param  {Integer} subscriptionID - Subscription ID of the subscription to be deleted
 		 * @return {Object}                 - Response object of deletion result
 		 */
-		deleteClientSubscription : async function(subscriptionID) {
+		deleteClientSubscription : function(subscriptionID) {
 			if (!subscriptionID) {
 				throw new CustomError({ status : 400, message : 'Subscription ID Not Provided' });
 			}
