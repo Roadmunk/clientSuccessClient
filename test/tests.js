@@ -743,6 +743,21 @@ describe('clientSuccessClient', function() {
 			expect(CS.getContact(testContact.id)).to.eventually.be.rejectedWith({ status : 404 });
 		});
 
+		it('should throw if the contactId provided is not part of the clientId passed', async function() {
+			const testOtherClientName = `TEST other user ${(new Date()).getTime()}`;
+			const testOtherClientAttributesInitial = {
+				name : testOtherClientName,
+			}
+
+			// create another client that is not linked to the contact we are trying to delete
+			const testOtherClient = await CS.createClient(testOtherClientAttributesInitial);
+
+			await expect(CS.deleteContact(testOtherClient.id, testContact.id)).to.be.rejected.and.eventually.include({
+				status : 404,
+				message : 'Client not found for contact with that id'
+			});
+		});
+
 		it('should throw and return 400 if the clientId and/or contactId are missing', async function() {
 			const expectedError = { status : 400, message : 'Client ID and Contact ID Required for Deletion' };
 			expect(() => CS.deleteContact()).to.throw(expectedError.message).that.has.property('status').which.equals(expectedError.status);
