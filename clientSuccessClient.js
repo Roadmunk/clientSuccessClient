@@ -119,9 +119,9 @@ JS.class(ClientSuccessClient, {
 		/**
 		 * Get ClientSuccess Client object by the externalId attribute
 		 * @param {String} externalId - External ID of Client
-		 * @returns {Object}          - ClientSuccess Client Data object
+		 * @returns Promise<Object>   - Promise with ClientSuccess Client Data object
 		 */
-		getClientByExternalId : async function(externalId) {
+		getClientByExternalId : function(externalId) {
 			if (!externalId || !_.isString(externalId)) {
 				throw new CustomError({ status : 400, message : 'Invalid externalId for getClientByExternalId.' });
 			}
@@ -166,7 +166,7 @@ JS.class(ClientSuccessClient, {
 		 * @param {String} clientId         - ClientSuccess clientId
 		 * @param {Object} attributes       - Attributes and values that are to be updated
 		 * @param {Object} customAttributes - Custom attributes that need to be set for the ClientSuccess Client Object
-		 * @returns {Object}                - The object of the resulting updated Client
+		 * @returns Promise<Object>         - Promise with the object of the resulting updated Client
 		 */
 		updateClient : async function(clientId, attributes, customAttributes) {
 			// ClientSuccess requires that all 'required' fields to be passed through to the update API
@@ -202,6 +202,19 @@ JS.class(ClientSuccessClient, {
 		 */
 		closeClient : function(clientId) {
 			return this.updateClient(clientId, { statusId : 4 });
+		},
+
+		/**
+		 * Deletes a client from ClientSuccess with the given ID
+		 * @param  {String} clientId - Client ID of the Client that will be deleted
+		 * @return Promise<Object>   - Promise with the response from the ClientSuccess API
+		 */
+		deleteClient : function(clientId) {
+			if (!clientId) {
+				throw new CustomError({ status : 400, message : 'Client ID Required for Deletion' });
+			}
+
+			return this.hitClientSuccessAPI('DELETE', `clients/${clientId}`);
 		},
 
 		/**
@@ -281,7 +294,7 @@ JS.class(ClientSuccessClient, {
 		 * @param {String} contactId        - ClientSuccess Contact ID of the user that is to be updated.
 		 * @param {Object} attributes       - Attributes that are to be updated in the ClientSuccess Contact object.
 		 * @param {Object} customAttributes - Custom attributes that are to be updated in the Contact object
-		 * @returns {Object}                - Contact data model of the newly updated contact.
+		 * @returns Promise<Object>         - Promise with the contact data model of the newly updated contact.
 		 */
 		updateContact : async function(clientId, contactId, attributes, customAttributes) {
 			this.validateClientSuccessId(clientId);
@@ -334,6 +347,20 @@ JS.class(ClientSuccessClient, {
 			}
 
 			return this.updateContact(clientId, contactId, attributes, customAttributes);
+		},
+
+		/**
+		 * Deletes a contact from ClientSuccess with the given IDs
+		 * @param  {String} clientId  - Client ID of the client the contact is part of
+		 * @param  {String} contactId - Contact ID of the contact to be deleted
+		 * @return Promise<Object>    - Promise with the response from the ClientSuccess API
+		 */
+		deleteContact : function(clientId, contactId) {
+			if (!clientId || !contactId) {
+				throw new CustomError({ status : 400, message : 'Client ID and Contact ID Required for Deletion' });
+			}
+
+			return this.hitClientSuccessAPI('DELETE', `clients/${clientId}/contacts/${contactId}`);
 		},
 
 		/**
@@ -452,7 +479,7 @@ JS.class(ClientSuccessClient, {
 		 * @param  {String}  name                     - Name of the new Product Type
 		 * @param  {Object}  [options]
 		 * @param  {Boolean} [options.recurring=true] - Denotes if Subscription is recurring or not
-		 * @return Promise<Object>                    - Resulting ClientSuccess Subscription object
+		 * @return Promise<Object>                    - Promise with the resulting ClientSuccess Subscription object
 		 */
 		createProductType : function(name, { recurring = true } = {}) {
 			if (!name) {
@@ -523,7 +550,7 @@ JS.class(ClientSuccessClient, {
 		 * @param  {Object} attributesToUpdate - Attribute object to update the subscription with
 		 * @return Promise<Object>             - Resulting ClientSuccess Subscription that was updated
 		 */
-		updateClientSubscription : async function(subscriptionObject, attributesToUpdate) {
+		updateClientSubscription : function(subscriptionObject, attributesToUpdate) {
 			if (!subscriptionObject.id) {
 				throw new CustomError({ status : 400, message : 'Passed subscription object does not have an ID' });
 			}
@@ -536,9 +563,9 @@ JS.class(ClientSuccessClient, {
 		/**
 		 * Delete a ClientSuccess Client subscription
 		 * @param  {Integer} subscriptionID - Subscription ID of the subscription to be deleted
-		 * @return {Object}                 - Response object of deletion result
+		 * @return Promise<Object>          - Promise with the response object of deletion result
 		 */
-		deleteClientSubscription : async function(subscriptionID) {
+		deleteClientSubscription : function(subscriptionID) {
 			if (!subscriptionID) {
 				throw new CustomError({ status : 400, message : 'Subscription ID Not Provided' });
 			}
