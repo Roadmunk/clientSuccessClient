@@ -360,8 +360,9 @@ JS.class(ClientSuccessClient, {
 				throw new CustomError({ status : 400, message : 'Client ID and Contact ID Required for Deletion' });
 			}
 
-			if (!(await this.doesContactBelongToClient(clientId, contactId))) {
-				throw new CustomError({ status : 404, message : 'Client not found for contact with that id' });
+			const response = await this.doesContactBelongToClient(clientId, contactId);
+			if (!response.isPartOfClient) {
+				throw new CustomError({ status : response.status, message : response.message });
 			}
 
 			return this.hitClientSuccessAPI('DELETE', `clients/${clientId}/contacts/${contactId}`);
@@ -430,11 +431,11 @@ JS.class(ClientSuccessClient, {
 		 */
 		doesContactBelongToClient : async function(clientId, contactId) {
 			try {
-				const contact = await this.getContact(clientId, contactId);
-				return contact.clientId === clientId;
+				const isPartOfClient = (await this.getContact(clientId, contactId)).clientId === clientId;
+				return { isPartOfClient, status : isPartOfClient ? 200 : 404, message : isPartOfClient ? 'Contact belongs to client.' : 'ID of the client found does not match the ClientId passed in.' };
 			}
 			catch(err) {
-				return false;
+				return { isPartOfClient : false, status : err.status, message : err.message };
 			}
 		},
 
