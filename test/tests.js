@@ -754,7 +754,7 @@ describe('clientSuccessClient', function() {
 
 			await expect(CS.deleteContact(testOtherClient.id, testContact.id)).to.be.rejected.and.eventually.include({
 				status : 404,
-				message : 'Contact not found'
+				message : 'Client not found for contact with that id'
 			});
 		});
 
