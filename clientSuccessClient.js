@@ -431,7 +431,7 @@ JS.class(ClientSuccessClient, {
 		doesContactBelongToClient : async function(clientId, contactId) {
 			try {
 				const contact = await this.getContact(clientId, contactId);
-				return contact.clientId === clientId;
+				return `${contact.clientId}` === clientId; // needs to be converted to a string since the object returned holds it as an int
 			}
 			catch(err) {
 				return false;
