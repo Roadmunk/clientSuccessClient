@@ -355,9 +355,13 @@ JS.class(ClientSuccessClient, {
 		 * @param  {String} contactId - Contact ID of the contact to be deleted
 		 * @return Promise<Object>    - Promise with the response from the ClientSuccess API
 		 */
-		deleteContact : function(clientId, contactId) {
+		deleteContact : async function(clientId, contactId) {
 			if (!clientId || !contactId) {
 				throw new CustomError({ status : 400, message : 'Client ID and Contact ID Required for Deletion' });
+			}
+
+			if (!(await this.doesContactBelongToClient(clientId, contactId))) {
+				throw new CustomError({ status : 404, message : 'Client not found for contact with that id' });
 			}
 
 			return this.hitClientSuccessAPI('DELETE', `clients/${clientId}/contacts/${contactId}`);
@@ -413,6 +417,24 @@ JS.class(ClientSuccessClient, {
 		validateClientSuccessId : function(clientSuccessId) {
 			if (!clientSuccessId || isNaN(parseInt(clientSuccessId))) {
 				throw new CustomError({ status : 400, message : 'Invalid ClientSuccess ID' });
+			}
+		},
+
+		/**
+		 * Check if the id of the contact passed in belongs to the client id thats passed in.
+		 * This is done through a GET api call since ClientSuccess contains this logic when
+		 * hitting this endpoint. Does not seem to also be the case with the DELETE endpoint
+		 * so this method should be used before sending a DELETE request for a contact.
+		 * @param {String} clientId  - the ID of the client the contact should be a part of
+		 * @param {String} contactId - the ID of the contact to be checked
+		 */
+		doesContactBelongToClient : async function(clientId, contactId) {
+			try {
+				const contact = await this.getContact(clientId, contactId);
+				return `${contact.clientId}` === clientId; // needs to be converted to a string since the object returned holds it as an int
+			}
+			catch(err) {
+				return false;
 			}
 		},
 
