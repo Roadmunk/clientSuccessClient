@@ -1,4 +1,4 @@
-const JS     = require('@roadmunk/jsclass/JS');
+const JS     = require('@roadmunk/jsclass');
 const axios  = require('axios');
 const _      = require('lodash');
 const Moment = require('moment');
