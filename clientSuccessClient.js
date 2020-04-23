@@ -45,11 +45,7 @@ JS.class(ClientSuccessClient, {
 				}
 			}
 			catch (error) {
-				if (error.response.status == 401) {
-					throw new CustomError({ status : 401, message : 'Authentication Error' });
-				}
-
-				throw new CustomError({ status : 400, message : 'Invalid Request' });
+				this.handleClientSuccessError(error);
 			}
 		},
 
@@ -85,24 +81,50 @@ JS.class(ClientSuccessClient, {
 					if (error.response.status === 401) {
 						this.authToken = null;
 					}
-					else if (error.response.status === 503) {
-						throw new CustomError({ status : 503, message : 'Service Temporarily Unavailable', userMessage : error.response.data.userMessage });
-					}
-					else if (error.response.status === 417) {
-						throw new CustomError({ status : 417, message : 'Expectation Failed', userMessage : error.response.data.userMessage });
-					}
-					else if (error.response.status === 404) {
-						throw new CustomError({ status : 404, message : 'Not Found', userMessage : error.response.data.userMessage });
-					}
-					else if (error.response.status === 400) {
-						throw new CustomError({ status : 400, message : 'Bad Request', userMessage : error.response.data.userMessage });
-					}
 					else {
-						throw new CustomError({ status : error.response.status, message : error.response.message, userMessage : error.response.data.userMessage });
+						const metadata = {
+							method,
+							path,
+							data,
+						};
+
+						this.handleClientSuccessError(error, JSON.stringify(metadata));
 					}
 				}
 			}
 			throw new CustomError({ status : 429, message : 'Too Many Requests' });
+		},
+
+		/**
+		 * DRY function for easy error classification and handling
+		 * @param  {Object} error Error object to be clasified and handled
+		 */
+		handleClientSuccessError : function(error, metadata) {
+			if (typeof error.response == 'undefined') {
+				throw new CustomError({ status : 400, message : 'Bad Request', userMessage : `Undefined error response body - ${JSON.stringify(error)}` });
+			}
+
+			if (typeof error.response.status == 'undefined') {
+				throw new CustomError({ status : 400, message : 'Bad Request', userMessage : `No error status code - ${JSON.stringify(error)}` });
+			}
+
+			const errorLegend = {
+				400 : 'Bad Request',
+				401 : 'Unauthorized',
+				404 : 'Not Found',
+				417 : 'Expectation Failed',
+				429 : 'Too Many Requests',
+				503 : 'Service Temporarily Unavailable',
+			};
+
+			const userMessage = `${typeof error.response.data.userMessage != 'undefined' ? error.response.data.userMessage : ''}${metadata ? ` - ${metadata}` : ''}`;
+
+			throw new CustomError({
+				status  : error.response.status,
+				message : error.response.status in errorLegend ? errorLegend[error.response.status] : error.response.message,
+				userMessage,
+			});
+
 		},
 
 		/**
